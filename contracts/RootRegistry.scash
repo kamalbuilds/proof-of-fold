@@ -23,15 +23,16 @@ contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian) {
     int constant ROOT_DELAY = 144;      // blocks, about one day
     int constant PUSH_DELAY = 4032;     // blocks, about four weeks: an active root this old may be pushed
 
-    Status public status;
+    // The first three are read by FoldClaimPool through IRootRegistry: keep their order.
     bytes32 public activeRoot;
     int public activeEpoch;
+    int public pushEpoch;               // epoch whose root has been active long enough for operator push
     bytes32 public activeSnapshot;
+    Status public status;
     bytes32 public pendingRoot;
     int public pendingEpoch;
     bytes32 public pendingSnapshot;
     int public highEpoch;               // highest epoch ever proposed, cancelled ones included
-    int public pushEpoch;               // epoch whose root has been active long enough for operator push
 
     modifier twoOfThree(sig a, sig b) {
         require(checkMultiSig([a, b], [op1, op2, op3]));

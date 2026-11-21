@@ -4,10 +4,18 @@ interface IRootRegistry {
     public bytes32 activeRoot;
     public int activeEpoch;
     public int pushEpoch;
+    public bytes32 activeSnapshot;
+    public Status status;
+    public bytes32 pendingRoot;
+    public int pendingEpoch;
+    public bytes32 pendingSnapshot;
+    public int highEpoch;
 }
 
 event Claimed(bytes32 indexed leafKey, bigint paid, bigint cumulative);
 event Pushed(bytes32 indexed leafKey, bigint paid, bigint cumulative);
+
+enum Status { Idle, Pending }
 
 error WrongToken();
 error BadProof();
@@ -31,6 +39,12 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
     int epoch;
 
     mapping(bytes32 => bigint) public claimed;
+
+    // Anyone may add reward tokens. The SDK call adds the token input and declares the amount the container keeps.
+    function fund(bytes32 category) {
+        require(category == rewardCategory, WrongToken());
+        require(this.tokens[category].tokenAmount >= 0, "no container");
+    }
 
     // Copy the registry's ACTIVE root. The pending one is still in its audit window and is never read.
     function syncRoot() {
@@ -60,11 +74,13 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
     }
 
     // Check the leaf against the active root, record the new cumulative total, return what is newly owed.
-    function settle(bytes method, bytes identity, bigint cumulative, bytes proof, int index) internal returns (bigint) {
+    // The receipt key is passed in by the caller so the SDK can derive the mapping entry from a plain argument; the
+    // contract proves it is the right one.
+    function settle(bytes method, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) internal returns (bigint) {
         require(index >= 0, "negative index");
+        require(leafKey == sha256(method + identity), "wrong receipt key");
         bytes32 leaf = sha256(0x00 + method + identity + toPaddedBytes(cumulative, 8));
         require(walk(leaf, proof, index) == this.root, BadProof());
-        bytes32 leafKey = sha256(method + identity);
         bigint already = this.claimed[leafKey];
         require(cumulative > already, NothingToClaim(cumulative, already));
         this.claimed[leafKey] = cumulative;
@@ -72,36 +88,36 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
     }
 
     // Method 0: anyone submits, the leaf's own locking bytecode is paid.
-    function claim(bytes32 category, bytes identity, bigint cumulative, bytes proof, int index) {
+    function claim(bytes32 category, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
         require(category == rewardCategory, WrongToken());
-        bigint owed = settle(0x00, identity, cumulative, proof, index);
+        bigint owed = settle(0x00, identity, leafKey, cumulative, proof, index);
         this.tokens[category].transfer(identity, owed);
-        emit Claimed(sha256(0x00 + identity), owed, cumulative);
+        emit Claimed(leafKey, owed, cumulative);
     }
 
     // Method 1: the key behind a legacy address signs, and chooses where the tokens go.
-    function claimWithKey(sig s, pubkey pk, bytes32 category, bytes destination, bigint cumulative, bytes proof, int index) {
+    function claimWithKey(sig s, pubkey pk, bytes32 category, bytes destination, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
         require(category == rewardCategory, WrongToken());
         require(checkSig(s, pk));
         bytes identity = bytes(hash160(pk));
-        bigint owed = settle(0x01, identity, cumulative, proof, index);
+        bigint owed = settle(0x01, identity, leafKey, cumulative, proof, index);
         this.tokens[category].transfer(destination, owed);
-        emit Claimed(sha256(0x01 + identity), owed, cumulative);
+        emit Claimed(leafKey, owed, cumulative);
     }
 
     // Operator push: once a root has been active for the long window (the registry opens it), the operator may pay
     // a leaf that never claimed, to the leaf's own identity, if the payout clears MIN_PUSH.
-    function push(sig s, bytes32 category, bytes method, bytes identity, bigint cumulative, bytes proof, int index) {
+    function push(sig s, bytes32 category, bytes method, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
         require(category == rewardCategory, WrongToken());
         require(checkSig(s, pusher));
         require(IRootRegistry(registry).pushEpoch == this.epoch, "push window not open for this epoch");
-        bigint owed = settle(method, identity, cumulative, proof, index);
+        bigint owed = settle(method, identity, leafKey, cumulative, proof, index);
         require(owed >= MIN_PUSH, "below the push minimum");
         if (method == 0x00) {
             this.tokens[category].transfer(identity, owed);
         } else {
             this.tokens[category].transfer(new LockingBytecodeP2PKH(bytes20(identity)), owed);
         }
-        emit Pushed(sha256(method + identity), owed, cumulative);
+        emit Pushed(leafKey, owed, cumulative);
     }
 }

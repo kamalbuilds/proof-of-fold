@@ -1,5 +1,5 @@
 // Merkle tree over FoldingCash payout leaves. Must agree byte for byte with FoldClaimPool.scash.
-//   leaf = sha256(0x00 | method | identity | cumulative as 8 bytes big endian)
+//   leaf = sha256(0x00 | method | identity | cumulative as 8 bytes little endian (OP_NUM2BIN))
 //   node = sha256(0x01 | left | right), missing leaves are 32 zero bytes, depth = ceil(log2(leaf count)).
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, concatBytes, hexToBytes } from '@noble/hashes/utils.js';
@@ -11,15 +11,16 @@ export type Proof = { index: number; siblings: Uint8Array[]; proofBytes: Uint8Ar
 
 const ZERO = new Uint8Array(32);
 
-export function u64be(n: bigint): Uint8Array {
-  if (n < 0n || n >= 1n << 64n) throw new RangeError('cumulative must fit in 8 bytes');
+/** What the contract's toPaddedBytes(cumulative, 8) yields: little endian, top bit is the VM number sign bit. */
+export function u64le(n: bigint): Uint8Array {
+  if (n < 0n || n >= 1n << 63n) throw new RangeError('cumulative must be in 0..2^63-1');
   const out = new Uint8Array(8);
-  new DataView(out.buffer).setBigUint64(0, n);
+  new DataView(out.buffer).setBigUint64(0, n, true);
   return out;
 }
 
 export const leafHash = (e: Entry): Uint8Array =>
-  sha256(concatBytes(Uint8Array.of(0x00, e.method), e.identity, u64be(e.cumulative)));
+  sha256(concatBytes(Uint8Array.of(0x00, e.method), e.identity, u64le(e.cumulative)));
 /** The pool's receipt key for a leaf: it does not depend on the cumulative amount. */
 export const leafKey = (e: Pick<Entry, 'method' | 'identity'>): Uint8Array =>
   sha256(concatBytes(Uint8Array.of(e.method), e.identity));
