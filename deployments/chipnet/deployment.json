@@ -1,0 +1,24 @@
+{
+  "network": "chipnet",
+  "tokenCategory": "2abf0aa756dd6771a8630512e9bc6c53fe7a470e1a1becc7b9bdf607a651011a",
+  "rootDelay": 6,
+  "pushDelay": 12,
+  "operators": [
+    "028588335fb3d5a758b4bb1d4639d1733ac454b5f3b76d45bd2d400b474d99ac55",
+    "03b3fa83a2a03374ebc73b28311f7fc79e190f9a1cd55f9b6596eea06a69357e08",
+    "02b5d69408be9236eb9f726a9d868721372609e5d05b549e6f3f2d79ced103dd81"
+  ],
+  "guardian": "03404670a9f7fca2685eca1bf70770f3c31e8be1673a31f3869f212c743cb14248",
+  "pusher": "034f060bf717aca61d085f5de9d3d604a1511a3be712685aa60b1c1d92b97638fc",
+  "registry": {
+    "categoryId": "4ee20e6faa85ece4f04aff73fc14dd83de25ab94871b17e5e5870eded79ebef2",
+    "address": "bchtest:pdvrdzxazlxsjczp7jzjw5wf4fghdd5lxe54fsn6vx5j35xpkk4jcj4ckyckv",
+    "deployTxid": "a631ab63bfb3ec1f21680bdc73669f642431dc6404f0adb8f8c36ba27064496a"
+  },
+  "pool": {
+    "categoryId": "0e74058afb02481ce89e99135ec75ed83aa51a9690afb16642561a5dd2e0d19d",
+    "address": "bchtest:pd4vrld8jst0mu9atnjm4ykfmzr4a0lufdhj0k79k53ljcm464fw7c0p632gq",
+    "deployTxid": "d1d06abe8d4c0683bb4396e16079483310fe49127a25b90a3359f418e4f1858b",
+    "fundTxid": "b6070f91606dd371ed5181e553f6c788590f3f96b35f7e8f91d10e7a45484d6a"
+  }
+}
