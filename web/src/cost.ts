@@ -12,7 +12,7 @@ let ctx: Ctx;
 
 const names: Record<string, string> = {
   'deploy-registry': 'Deploy RootRegistry', 'deploy-pool': 'Deploy FoldClaimPool', 'fund-pool': 'Fund the pool with tokens', 'propose-root': 'Propose a root (2 of 3 signatures)',
-  'activate-root': 'Activate the root', 'sync-root': 'Sync the pool', 'claim-demo': 'Claim (demo leaf)', 'claim-demo-again': 'Claim (demo leaf)', 'claim-page': 'Claim made from this page', 'fund-burners': 'Fund the demo keys with fee sats', send: 'Plain send', 'open-push': 'Open the push window', push: 'Operator push',
+  'activate-root': 'Activate the root', 'sync-root': 'Sync the pool', 'claim-demo': 'Claim (demo leaf)', 'claim-demo-again': 'Claim (demo leaf)', 'claim-page': 'Claim made from this page', 'fund-burners': 'Fund the demo keys with fee sats', 'mint-token': 'Mint the reward token', send: 'Plain send', 'open-push': 'Open the push window', push: 'Operator push',
 };
 const label = (r: Logged) => (names[r.what] ?? r.what) + (r.demo !== undefined ? ` #${r.demo}` : '');
 

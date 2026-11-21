@@ -161,6 +161,7 @@ input::placeholder { color: var(--muted); }
 .claimer .row .mono { font-size: var(--t-12); }
 .claimer .num-in { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
 .claimer .num-in input { width: 90px; padding: 6px 8px; }
+.claimer .num-in select { width: auto; min-width: 80px; padding: 6px 8px; }
 .gate { margin-top: var(--s3); padding: 12px 14px; border: 1px solid var(--warn); background: var(--warn-soft); border-radius: var(--r); font-size: var(--t-15); }
 .gate.bad { border-color: var(--bad); background: var(--bad-soft); }
 .gate p { margin: 0 0 var(--s2); max-width: 38em; }

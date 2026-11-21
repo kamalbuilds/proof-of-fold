@@ -10,8 +10,8 @@ export const NETS: Record<Net, { symbol: string; prefix: string; tx: string; add
   chipnet: { symbol: 'tFLDCH', prefix: 'bchtest', tx: 'https://chipnet.imaginary.cash/tx/', address: 'https://chipnet.imaginary.cash/address/', label: 'chipnet' },
   mainnet: { symbol: 'FLDCH', prefix: 'bitcoincash', tx: 'https://blockchair.com/bitcoin-cash/transaction/', address: 'https://blockchair.com/bitcoin-cash/address/', label: 'mainnet' },
 };
-/** SolidCash funds at 1 sat/byte; chipnet carries a standing 1 sat/byte backlog, so the page pays more (same rates as scripts/run.ts). */
-export const FEE_RATE: Record<Net, number> = { chipnet: 3, mainnet: 2 };
+/** SolidCash funds at 1 sat/byte; chipnet carries a standing 1 sat/byte backlog, so the page pays more (same rates as scripts/run.ts; a claim is about 7.8 kB). */
+export const FEE_RATE: Record<Net, number> = { chipnet: 2, mainnet: 2 };
 export const SPONSOR_API = 'https://api.folding.cash/v1/GetDistro';
 
 export type Snap = {
@@ -26,6 +26,9 @@ export type Ctx = {
   epochs: number[]; snap?: Snap;
 };
 
+/** chipnet's node counts a relative lock unit as roughly 10 minutes, so a block countdown reads as a time estimate there. */
+export const lockEta = (c: { net: Net }, left: number) => (c.net === 'chipnet' ? ` (about ${left * 10} minutes on chipnet)` : '');
+
 const ZERO_ROOT = '0'.repeat(64);
 export const isZeroRoot = (h: string) => h === ZERO_ROOT;
 export const fetchJson = async <T>(path: string): Promise<T> => {
@@ -38,7 +41,8 @@ export const dataUrl = (net: Net, file: string) => `./data/${net}/${file}`;
 export async function openContext(net: Net, epochs: number[]): Promise<Ctx> {
   const d = await fetchJson<Deployment>(dataUrl(net, 'deployment.json'));
   setFeeRate(FEE_RATE[net]);
-  const provider: any = new ElectrumNetworkProvider(net as any, { manualConnectionManagement: true });
+  // chipnet.bch.ninja (the SDK default) keeps a stale mempool; chipnet.imaginary.cash does not.
+  const provider: any = new ElectrumNetworkProvider(net as any, { manualConnectionManagement: true, ...(net === 'chipnet' ? { hostname: 'chipnet.imaginary.cash' } : {}) } as any);
   await provider.connect();
   const { registry, pool } = attach(d, provider);
   return { net, d, provider, registry, pool, epochs };

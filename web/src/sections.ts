@@ -1,6 +1,6 @@
 // Static-from-deployment sections: the state strip, addresses, authority and footer.
 import type { Deployment } from '../../src/pool-client.ts';
-import { $, NETS, SPONSOR_API, addrLink, blocksToActivate, esc, fmtInt, fmtTokens, fetchJson, loadEpoch, isZeroRoot, shortHex, txLink, type Ctx, type Snap } from './chain.ts';
+import { $, NETS, lockEta, SPONSOR_API, addrLink, blocksToActivate, esc, fmtInt, fmtTokens, fetchJson, loadEpoch, isZeroRoot, shortHex, txLink, type Ctx, type Snap } from './chain.ts';
 
 type Lines = Record<string, string | number>;
 let lines: Lines = {};
@@ -17,7 +17,7 @@ export function renderState(c: Ctx, s: Snap) {
   let window: string;
   if (!pending) window = `${chip('idle', 'no proposal')} <span class="aux">a proposal waits ${c.d.rootDelay} blocks before it can activate</span>`;
   else if (!b.confirmed) window = `${chip('warn', 'waiting')} <span>the proposal confirms first, then ${c.d.rootDelay} blocks</span>`;
-  else if (b.left > 0) window = `${chip('warn', `${b.left} blocks`)} <span>of ${c.d.rootDelay} remain before epoch ${s.pendingEpoch} can activate</span>`;
+  else if (b.left > 0) window = `${chip('warn', `${b.left} blocks`)} <span>of ${c.d.rootDelay} remain before epoch ${s.pendingEpoch} can activate${lockEta(c, b.left)}</span>`;
   else window = `${chip('ok', 'open')} <span>epoch ${s.pendingEpoch} can activate now, anyone may call activateRoot</span>`;
   const sync = s.poolEpoch === 0 && s.activeEpoch === 0 ? chip('idle', 'no root yet') : s.poolEpoch === s.activeEpoch ? chip('ok', 'in sync') : chip('warn', 'behind the registry');
   $('sheet').innerHTML = `

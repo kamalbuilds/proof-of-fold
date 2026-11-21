@@ -11,7 +11,7 @@
 //   tsx scripts/run.ts <net> claim-demo-again <i> <destination address>
 //   tsx scripts/run.ts <net> push <leaf index>
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { Signer, TransactionBuilder } from '@solidcash/solidcash';
+import { Signer, SignatureTemplate, TransactionBuilder } from '@solidcash/solidcash';
 import { ContractFactory } from '@solidcash/solidcash/contract-factory';
 import { getDataNftLockingBytecode } from '@solidcash/solidcash/stateful';
 import { signer as signerOf, provider as providerOf, key } from '../src/chain.ts';
@@ -165,6 +165,14 @@ switch (step) {
     const { registry } = attach(d, p);
     const r = await registry.connect(deployer()).call.proposeRoot(ecdsaSig(rolePriv('OPERATOR1')), ecdsaSig(rolePriv('OPERATOR2')), hexToBin(e.root), hexToBin(e.snapshotSha256), BigInt(e.epoch)).send();
     await logAndWait('propose-root', r.txid, { epoch: e.epoch, root: e.root, snapshot: e.snapshotSha256 });
+    break;
+  }
+  case 'cancel': {
+    // the guardian vetoes the pending root during its audit window
+    const d = dep();
+    const { registry } = attach(d, p);
+    const r = await registry.connect(deployer()).call.cancelPending(new SignatureTemplate(rolePriv('GUARDIAN'))).send();
+    await logAndWait('cancel-pending', r.txid);
     break;
   }
   case 'activate': {

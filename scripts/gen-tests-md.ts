@@ -21,8 +21,15 @@ for (const d of depth) out += `| ${d.depth} | ${d.leaves.toLocaleString('en-US')
 for (const net of ['chipnet', 'mainnet']) {
   const t = txs(net);
   if (!t.length) continue;
-  out += `\n## ${net} transactions\n\nRead back with \`npx tsx scripts/tx.ts ${net} <txid>\` (confirmations, size, fee, fee rate).\n\n| Step | Txid |\n|---|---|\n`;
-  for (const x of t) out += `| ${x.what} | ${x.txid} |\n`;
+  const factsFile = new URL(`../deployments/${net}/tx-facts.json`, import.meta.url);
+  const facts: Record<string, any> = existsSync(factsFile) ? Object.fromEntries(J(`deployments/${net}/tx-facts.json`).facts.map((f: any) => [f.txid, f])) : {};
+  out += `\n## ${net} transactions\n\nRead back with \`npx tsx scripts/tx.ts ${net} <txid>\` (size, fee, fee rate, confirmations) and \`npx tsx scripts/tx-facts.ts ${net}\` (all of them, writes deployments/${net}/tx-facts.json).\n\n| Step | Txid | Bytes | Fee (sats) | Sat/byte | Block |\n|---|---|---|---|---|---|\n`;
+  for (const x of t) { const f = facts[x.txid]; out += `| ${x.what} | ${x.txid} | ${f?.bytes ?? ''} | ${f?.fee ?? ''} | ${f?.satPerByte ?? ''} | ${f?.blockHeight ?? ''} |\n`; }
+  const refusals = new URL(`../deployments/${net}/refusals.json`, import.meta.url);
+  if (existsSync(refusals)) {
+    out += `\n### Refusals and vetoes seen on ${net}\n\n| When | Action | Answer |\n|---|---|---|\n`;
+    for (const r of J(`deployments/${net}/refusals.json`).items) out += `| ${r.when} | ${r.action} | ${r.answer.replace(/\|/g, '/')}${r.accepted ? ' ; then: ' + r.accepted : ''} |\n`;
+  }
 }
 writeFileSync(new URL('../TESTS.md', import.meta.url), out);
 console.log('TESTS.md written');

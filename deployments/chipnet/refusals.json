@@ -1,0 +1,26 @@
+{
+  "note": "Responses captured from chipnet.imaginary.cash and the SDK while exercising the live contracts.",
+  "items": [
+    {
+      "when": "2026-11-21T16:48:13Z .. 17:00:31Z",
+      "action": "activateRoot before the audit window ended (5 attempts, proposal block 341328)",
+      "answer": "the transaction was rejected by network rules. non-BIP68-final (code 64)",
+      "accepted": "activateRoot accepted at about 17:01Z, txid d1ae9eef08f4d2d32dfc73c6c3a5b70f1ad5116576ade59de4c29e33dfbeb209"
+    },
+    {
+      "when": "2026-11-21T17:23Z",
+      "action": "second claim for demo claimer 149 after txid d779eefe (SDK local covenant evaluation)",
+      "answer": "require failed: NothingToClaim(...)"
+    },
+    {
+      "when": "2026-11-21T17:24Z",
+      "action": "rebroadcast of confirmed claim txid d779eefee38b3dd74fd1aa629fe8eea24e77b193b589d77a2590d84181e52b2d",
+      "answer": "the transaction was rejected by network rules. transaction already in block chain"
+    },
+    {
+      "when": "2026-11-21T17:28Z",
+      "action": "guardian cancelPending on epoch 2, txid 28e744293a1832840df9b9faff4354b123ef96e778a8b352352e0fe361a888fa",
+      "answer": "accepted; registry status Idle, highEpoch 2, activeEpoch stays 1"
+    }
+  ]
+}

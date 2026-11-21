@@ -1,0 +1,160 @@
+{
+  "readAtTip": 341424,
+  "readAt": "2026-11-21T17:33:17.402Z",
+  "facts": [
+    {
+      "what": "mint-token",
+      "txid": "a9e502d13201ec08ba3b4fcd4d0eff8e9b2e166e313d0dcb97465a6cfc5cdd39",
+      "bytes": 262,
+      "vin": 1,
+      "vout": 2,
+      "fee": 500,
+      "satPerByte": 1.91,
+      "confirmations": 102,
+      "blockHeight": 341323
+    },
+    {
+      "what": "deploy-registry",
+      "txid": "5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1",
+      "bytes": 898,
+      "vin": 1,
+      "vout": 7,
+      "fee": 1898,
+      "satPerByte": 2.11,
+      "confirmations": 100,
+      "blockHeight": 341325
+    },
+    {
+      "what": "deploy-pool",
+      "txid": "c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca",
+      "bytes": 842,
+      "vin": 1,
+      "vout": 6,
+      "fee": 1842,
+      "satPerByte": 2.19,
+      "confirmations": 99,
+      "blockHeight": 341326
+    },
+    {
+      "what": "fund-pool",
+      "txid": "de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585",
+      "bytes": 5959,
+      "vin": 3,
+      "vout": 5,
+      "fee": 12298,
+      "satPerByte": 2.06,
+      "confirmations": 98,
+      "blockHeight": 341327
+    },
+    {
+      "what": "propose-root",
+      "txid": "d51db6e2b8788a73e7be747fab4354c14cd786f7f70e1e9ba687a94f1151ee27",
+      "bytes": 4706,
+      "vin": 4,
+      "vout": 5,
+      "fee": 9792,
+      "satPerByte": 2.08,
+      "confirmations": 97,
+      "blockHeight": 341328
+    },
+    {
+      "what": "activate-root",
+      "txid": "d1ae9eef08f4d2d32dfc73c6c3a5b70f1ad5116576ade59de4c29e33dfbeb209",
+      "bytes": 4859,
+      "vin": 5,
+      "vout": 6,
+      "fee": 10098,
+      "satPerByte": 2.08,
+      "confirmations": 35,
+      "blockHeight": 341390
+    },
+    {
+      "what": "sync-root",
+      "txid": "a295c737825a7cbaa54ac379ce930235f39f42410dbefe596a8e0dcc2ca28b6c",
+      "bytes": 6372,
+      "vin": 4,
+      "vout": 4,
+      "fee": 13600,
+      "satPerByte": 2.13,
+      "confirmations": 30,
+      "blockHeight": 341395
+    },
+    {
+      "what": "fund-burners",
+      "txid": "5bc1f67686dce30c5a9a53c8885bb812be2ff3f33d0efba462a03f0e88047252",
+      "bytes": 744,
+      "vin": 4,
+      "vout": 5,
+      "fee": 1721,
+      "satPerByte": 2.31,
+      "confirmations": 27,
+      "blockHeight": 341398
+    },
+    {
+      "what": "fund-burners",
+      "txid": "2849b71a24bd927e4abc4e8fbe2c5670fc2bcd995b3019301004b47b59035843",
+      "bytes": 219,
+      "vin": 1,
+      "vout": 2,
+      "fee": 520,
+      "satPerByte": 2.37,
+      "confirmations": 25,
+      "blockHeight": 341400
+    },
+    {
+      "what": "claim-demo",
+      "txid": "d779eefee38b3dd74fd1aa629fe8eea24e77b193b589d77a2590d84181e52b2d",
+      "bytes": 7847,
+      "vin": 7,
+      "vout": 8,
+      "fee": 16074,
+      "satPerByte": 2.05,
+      "confirmations": 24,
+      "blockHeight": 341401
+    },
+    {
+      "what": "send",
+      "txid": "3cac33b9cded0369d77b0dc3c4e31f4ef675550978adb8f40620c712d5ab9d1b",
+      "bytes": 219,
+      "vin": 1,
+      "vout": 2,
+      "fee": 520,
+      "satPerByte": 2.37,
+      "confirmations": 9,
+      "blockHeight": 341416
+    },
+    {
+      "what": "propose-root",
+      "txid": "25939f03c701e1dfbcd0dab9c2af7cf07091f7fbeea595c614629797d2ad462f",
+      "bytes": 4706,
+      "vin": 4,
+      "vout": 5,
+      "fee": 9790,
+      "satPerByte": 2.08,
+      "confirmations": 6,
+      "blockHeight": 341419
+    },
+    {
+      "what": "cancel-pending",
+      "txid": "28e744293a1832840df9b9faff4354b123ef96e778a8b352352e0fe361a888fa",
+      "bytes": 4097,
+      "vin": 3,
+      "vout": 4,
+      "fee": 8574,
+      "satPerByte": 2.09,
+      "confirmations": 4,
+      "blockHeight": 341421
+    },
+    {
+      "what": "propose-root",
+      "txid": "b738b6f492f9ba4efd598da880b11efeeaa966897c0006a7f7063e85ad11c4a4",
+      "bytes": 4707,
+      "vin": 4,
+      "vout": 5,
+      "fee": 9794,
+      "satPerByte": 2.08,
+      "confirmations": 3,
+      "blockHeight": 341422
+    }
+  ]
+}

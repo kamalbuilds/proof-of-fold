@@ -6,7 +6,7 @@ import { attach, claimWithKeyCall, findLeaf, type EpochFile, type Leaf } from '.
 import { demoKey, publicKey, addressOf, lockingBytecodeOfAddress } from '../../src/keys.ts';
 import { hash160, p2pkhLock } from '../../src/identity.ts';
 import { leafKey, rootFromProof } from '../../src/merkle.ts';
-import { $, NETS, FEE_RATE, esc, fmtInt, fmtTokens, isZeroRoot, loadEpoch, epochToShow, shortHex, sleep, txLink, addrLink, blocksToActivate, type Ctx, type Snap } from './chain.ts';
+import { $, NETS, FEE_RATE, lockEta, esc, fmtInt, fmtTokens, isZeroRoot, loadEpoch, epochToShow, shortHex, sleep, txLink, addrLink, blocksToActivate, type Ctx, type Snap } from './chain.ts';
 import { selectLeaf } from './leafview.ts';
 import { txStats } from './txstats.ts';
 
@@ -24,6 +24,8 @@ let onClaimed: () => void = () => {};
 const btn = () => $('claim-btn') as HTMLButtonElement;
 const keyOf = (i: number) => demoKey(ctx.net, i);
 const demoCount = () => Number((ef!.params as any).demoCount);
+/** Only demo keys that hold a fee float are offered. */
+const candidates = (): number[] => ctx.d.fundedBurners?.indices ?? Array.from({ length: demoCount() }, (_, i) => i);
 
 /** The token-aware check: a q... address would receive CashTokens into a wallet that cannot see them. */
 export function parseDestination(raw: string, net: Ctx['net']): { ok: true; dest: Dest } | { ok: false; msg: string } {
@@ -63,12 +65,12 @@ async function loadClaimer(i: number): Promise<Claimer> {
   return { i, priv, address, leaf, claimed, sats };
 }
 
-/** First demo leaf from a random start whose receipt is still empty. */
-async function assign(from?: number): Promise<Claimer | undefined> {
-  const n = demoCount();
-  const start = from ?? Math.floor(Math.random() * n);
-  for (let k = 0; k < n; k++) {
-    const c = await loadClaimer((start + k) % n);
+/** First funded demo leaf from a random start whose receipt is still empty. */
+async function assign(after?: number): Promise<Claimer | undefined> {
+  const list = candidates();
+  const start = after === undefined ? Math.floor(Math.random() * list.length) : (list.indexOf(after) + 1) % list.length;
+  for (let k = 0; k < list.length; k++) {
+    const c = await loadClaimer(list[(start + k) % list.length]);
     if (c.claimed === 0n) return c;
   }
   return undefined;
@@ -81,14 +83,14 @@ function renderClaimer() {
   const sym = NETS[ctx.net].symbol;
   box.hidden = false;
   box.innerHTML = `
-    <div class="row"><span class="lbl">Demo leaf</span><span class="num-in"><span>#<input id="claimer-i" type="number" min="0" max="${demoCount() - 1}" value="${c.i}" aria-label="Demo leaf number"></span><button class="btn ghost" id="claimer-go" type="button">Use this number</button></span></div>
+    <div class="row"><span class="lbl">Demo leaf</span><span class="num-in"><span>#<select class="sel" id="claimer-i" aria-label="Demo leaf number">${candidates().map((i) => `<option value="${i}" ${i === c.i ? 'selected' : ''}>${i}</option>`).join('')}</select></span><button class="btn ghost" id="claimer-go" type="button">Use this leaf</button></span></div>
     <div class="row"><span class="lbl">Published key</span><span class="mono">${binToHex(c.priv)}<br>Derived as sha256 of the public label foldclaim-demo-claimer/${ctx.net}/${c.i}. It holds only this demo leaf and the fee sats below.</span></div>
     <div class="row"><span class="lbl">Key address</span><span>${addrLink(ctx, c.address)} <span class="mono">${fmtInt(c.sats)} sats for the fee</span></span></div>
     <div class="row"><span class="lbl">Leaf</span><span>${fmtTokens(c.leaf.entry.cumulative)} ${sym} cumulative \u00b7 leaf index ${c.leaf.index} \u00b7 proof depth ${c.leaf.proof.length / 32} \u00b7 method 1 (key signs)</span></div>
     <div class="row"><span class="lbl">Receipt</span><span>${c.claimed === 0n ? 'unclaimed' : `claimed ${fmtTokens(c.claimed)} ${sym}`}</span></div>`;
   $('claimer-go').addEventListener('click', async () => {
-    const v = Number(($('claimer-i') as HTMLInputElement).value);
-    if (!Number.isInteger(v) || v < 0 || v >= demoCount()) return;
+    const v = Number(($('claimer-i') as HTMLSelectElement).value);
+    if (!candidates().includes(v)) return;
     await setClaimer(await loadClaimer(v), true);
   });
   $('claim-next').hidden = false;
@@ -116,7 +118,7 @@ function gate(s: Snap): { open: boolean; html: string; sync: boolean } {
   }
   if (s.status === 1) {
     const b = blocksToActivate(s, rd);
-    const when = !b.confirmed ? `The proposal is waiting for its first confirmation, then the ${rd} block audit window runs.` : b.left > 0 ? `${b.left} of ${rd} audit window blocks remain.` : 'The audit window has elapsed and activation is open to anyone.';
+    const when = !b.confirmed ? `The proposal is waiting for its first confirmation, then the ${rd} block audit window runs.` : b.left > 0 ? `${b.left} of ${rd} audit window blocks remain${lockEta(ctx, b.left)}.` : 'The audit window has elapsed and activation is open to anyone.';
     return { open: false, sync: false, html: `<p>Epoch ${s.pendingEpoch} (root ${shortHex(s.pendingRoot, 10, 6)}) is pending in the registry. ${when} Claims open after the registry activates the root and the pool syncs. The proof below already verifies against the pending root.</p>` };
   }
   return { open: false, sync: false, html: '<p>The registry has no root yet.</p>' };
@@ -224,9 +226,13 @@ async function doSync() {
   const s = step('Syncing the pool: building syncRoot, signing with the demo key, broadcasting');
   try {
     if (!claimer) throw new Error('no demo key to pay the fee');
-    await ensureFunders(claimer);
+    // syncRoot emits nothing and moves no value, so SolidCash 0.50 adds no funding input: the demo key's coin is added here.
+    const coins: any[] = (await ctx.provider.getUtxos(claimer.address)).filter((u: any) => !u.token).sort((x: any, y: any) => Number(y.satoshis - x.satoshis));
+    const fee = BigInt(6800 * FEE_RATE[ctx.net]);
+    if (!coins[0] || coins[0].satoshis <= fee + 1000n) throw new Error(`the demo key's largest coin cannot cover the ${fee} sat sync fee`);
+    const signer = new Signer(claimer.priv, ctx.provider);
     const { pool } = attach(ctx.d, ctx.provider);
-    const r = await pool.connect(new Signer(claimer.priv, ctx.provider)).call.syncRoot().send();
+    const r = await pool.connect(signer).call.syncRoot().addInput(coins[0], signer.unlockP2PKH()).addOutput({ to: p2pkhLock(hash160(publicKey(claimer.priv))), amount: coins[0].satoshis - fee } as any).send();
     s.done(`synced in ${r.txid}`);
     await onRefresh();
   } catch (e) {
@@ -391,6 +397,6 @@ export function initClaim(c: Ctx, refresh: () => Promise<void>, claimed: (txid: 
     refreshButton();
   });
   $('claimform').addEventListener('submit', (e) => { e.preventDefault(); doClaim(); });
-  $('claim-next').addEventListener('click', async () => { if (claimer) await setClaimer(await assign((claimer.i + 1) % demoCount()), true); });
+  $('claim-next').addEventListener('click', async () => { if (claimer) await setClaimer(await assign(claimer.i), true); });
   $('double-btn').addEventListener('click', doDouble);
 }

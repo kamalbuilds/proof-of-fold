@@ -3,3 +3,9 @@
 {"at":"2026-11-21T15:52:07.656Z","net":"chipnet","what":"deploy-pool","txid":"c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca","category":"146333432ea2cc8954cecf0e6c76aa144475ed2f6c6c3116b0c40e44da32d6c8"}
 {"at":"2026-11-21T15:54:04.436Z","net":"chipnet","what":"fund-pool","txid":"de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585","units":"110000000000000"}
 {"at":"2026-11-21T15:55:57.882Z","net":"chipnet","what":"propose-root","txid":"d51db6e2b8788a73e7be747fab4354c14cd786f7f70e1e9ba687a94f1151ee27","epoch":1,"root":"a890b9cc68b773c429b13654bcc39771d017eac75a1ac22d17b6f9420eb697f8","snapshot":"d13b3ec2f81cd10e1ccf9308966821f9b72cf108cc1271765f514364d47fb4ab"}
+{"at":"2026-11-21T17:01:56.623Z","net":"chipnet","what":"activate-root","txid":"d1ae9eef08f4d2d32dfc73c6c3a5b70f1ad5116576ade59de4c29e33dfbeb209"}
+{"at":"2026-11-21T17:05:34.665Z","net":"chipnet","what":"sync-root","txid":"a295c737825a7cbaa54ac379ce930235f39f42410dbefe596a8e0dcc2ca28b6c"}
+{"at":"2026-11-21T17:07:38.046Z","net":"chipnet","what":"fund-burners","txid":"5bc1f67686dce30c5a9a53c8885bb812be2ff3f33d0efba462a03f0e88047252","first":0,"count":4,"sats":"30000"}
+{"at":"2026-11-21T17:09:36.094Z","net":"chipnet","what":"fund-burners","txid":"2849b71a24bd927e4abc4e8fbe2c5670fc2bcd995b3019301004b47b59035843","first":149,"count":1,"sats":"30000"}
+{"at":"2026-11-21T17:11:24.931Z","net":"chipnet","what":"claim-demo","txid":"d779eefee38b3dd74fd1aa629fe8eea24e77b193b589d77a2590d84181e52b2d","demo":149,"cumulative":"10000000000","destination":"bchtest:zqm9tthwdxpjeuuc6zjp2t8dsa2tykrm2ulzla2j55"}
+{"at":"2026-11-21T17:22:44.550Z","net":"chipnet","what":"send","txid":"3cac33b9cded0369d77b0dc3c4e31f4ef675550978adb8f40620c712d5ab9d1b","from":"DEPLOYER","outputs":1}
