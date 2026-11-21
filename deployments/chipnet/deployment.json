@@ -20,5 +20,14 @@
     "address": "bchtest:pd5h697k0wgde8l3gpfspeylls4vjcxewzr3h6q0u0rgevg6rf0hvwgk6urss",
     "deployTxid": "c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca",
     "fundTxid": "de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585"
+  },
+  "fundedBurners": {
+    "sats": "30000",
+    "indices": [
+      0,
+      1,
+      2,
+      3
+    ]
   }
 }

@@ -177,7 +177,11 @@ switch (step) {
   case 'sync': {
     const d = dep();
     const { pool } = attach(d, p);
-    const r = await pool.connect(deployer()).call.syncRoot().send();
+    const s = deployer();
+    // syncRoot emits nothing and moves no value, so SolidCash 0.50 adds no funding input; a real node needs a fee.
+    const coin = (await s.getUtxos()).filter((u) => !u.token).sort((a, b) => Number(b.satoshis - a.satoshis))[0];
+    const fee = BigInt(6800 * FEE);
+    const r = await pool.connect(s).call.syncRoot().addInput(coin, s.unlockP2PKH()).addOutput({ to: p2pkhLock(s.pkh), amount: coin.satoshis - fee }).send();
     await logAndWait('sync-root', r.txid);
     break;
   }
