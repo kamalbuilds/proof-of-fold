@@ -20,3 +20,4 @@
 {"at":"2026-11-21T18:37:32.988Z","net":"chipnet","what":"sync-root","txid":"c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681","pool":2}
 {"at":"2026-11-21T18:43:33.589Z","net":"chipnet","what":"claim-demo","txid":"c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573","demo":149,"cumulative":"15000000000","destination":"bchtest:zqm9tthwdxpjeuuc6zjp2t8dsa2tykrm2ulzla2j55","pool":2}
 {"at":"2026-11-21T18:47:45.481Z","net":"chipnet","what":"propose-root","txid":"02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446","epoch":4,"root":"dc32d26022b7cb2a3ac596c41f9a90934cbf1cf8cca53b7de84a905dbbc4c8b7","snapshot":"3335f60db0c3252237c05d8008eefa92df80e86c45efb6a23b8fe538bab97716"}
+{"at":"2026-11-21T19:00:00.000Z","net":"chipnet","what":"claim-browser","txid":"9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d","by":"browser","demo":1,"cumulative":"15000000000","pool":2}
