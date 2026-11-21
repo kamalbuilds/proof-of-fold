@@ -17,11 +17,10 @@ enum Status { Idle, Pending }
 // A root is proposed by two of three operator keys, then sits in a public audit window of ROOT_DELAY blocks
 // (a relative timelock on this contract's own UTXO, checked by the chain, so no key can shorten it). During the
 // window a separate guardian key can cancel the proposal but can never propose one. Activation is
-// permissionless once the window has passed. Every proposal pins the SHA-256 of the exact F@H API response the
+// permissionless once the window has passed. The window and the push delay are constructor arguments, fixed in the
+// contract address: the production profile is 144 and 4032 blocks, a demo profile can use fewer. Every proposal pins the SHA-256 of the exact F@H API response the
 // root was built from, so anyone can re-fetch it, rebuild the tree and compare.
-contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian) {
-    int constant ROOT_DELAY = 144;      // blocks, about one day
-    int constant PUSH_DELAY = 4032;     // blocks, about four weeks: an active root this old may be pushed
+contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian, int rootDelay, int pushDelay) {
 
     // The first three are read by FoldClaimPool through IRootRegistry: keep their order.
     bytes32 public activeRoot;
@@ -63,7 +62,7 @@ contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian) {
 
     function activateRoot() {
         require(this.status == Status.Pending, NotPending());
-        require(this.age >= ROOT_DELAY, AuditWindowOpen(ROOT_DELAY));
+        require(this.age >= rootDelay, AuditWindowOpen(rootDelay));
         this.activeRoot = this.pendingRoot;
         this.activeSnapshot = this.pendingSnapshot;
         this.activeEpoch = this.pendingEpoch;
@@ -74,7 +73,7 @@ contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian) {
     function openPush() {
         require(this.status == Status.Idle, "a proposal is pending");
         require(this.activeEpoch > this.pushEpoch, "push already open for this epoch");
-        require(this.age >= PUSH_DELAY, AuditWindowOpen(PUSH_DELAY));
+        require(this.age >= pushDelay, AuditWindowOpen(pushDelay));
         this.pushEpoch = this.activeEpoch;
         emit PushOpened(this.activeEpoch);
     }

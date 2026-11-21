@@ -10,3 +10,5 @@ cache/
 .DS_Store
 coverage/
 web/dist/
+FUNDING.md
+upstream/work/

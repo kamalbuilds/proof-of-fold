@@ -30,7 +30,7 @@ export async function setup(opts: { fillers?: number } = {}) {
   const [op1, op2, op3, guardian, alice, bob, mallory, dest] = await ethers.getSigners(8);
   const provider: any = op1.provider;
   const regFactory = await ethers.getContractFactory('RootRegistry', op1);
-  const registry: any = await regFactory.deploy(op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey);
+  const registry: any = await regFactory.deploy(op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey, BigInt(ROOT_DELAY), BigInt(PUSH_DELAY));
   await registry.waitForDeployment();
 
   const tokenCoin = { txid: 'c'.repeat(64), vout: 0, satoshis: 1_200n, token: { category: ASSET, amount: POOL_TOKENS } };
@@ -45,7 +45,7 @@ export async function setup(opts: { fillers?: number } = {}) {
       IRootRegistry: {
         artifact: registry.inner.artifact,
         categoryId: registry.categoryId,
-        constructorArgs: [op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey],
+        constructorArgs: [op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey, BigInt(ROOT_DELAY), BigInt(PUSH_DELAY)],
       },
     },
   } as any);

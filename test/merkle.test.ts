@@ -22,7 +22,7 @@ describe('Merkle tree', () => {
     for (const mutate of [
       (e: Entry) => ({ ...e, cumulative: e.cumulative + 1n }),
       (e: Entry) => ({ ...e, method: (e.method ^ 1) as 0 | 1 }),
-      (e: Entry) => ({ ...e, identity: Uint8Array.from(e.identity, (b, k) => (k === 0 ? b ^ 1 : b)) }),
+      (e: Entry) => ({ ...e, identity: Uint8Array.from(e.identity, (b, k) => (k === e.identity.length - 1 ? b ^ 1 : b)) }),
     ]) for (let i = 0; i < base.length; i++) {
       const t = base.map((e, j) => (i === j ? mutate(e) : e));
       expect(bytesToHex(new MerkleTree(t).root), `leaf ${i}`).not.toBe(root);

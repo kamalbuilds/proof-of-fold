@@ -15,7 +15,7 @@ const snapA = new Uint8Array(32).fill(0x5a);
 async function setup() {
   const [op1, op2, op3, guardian, mallory] = await ethers.getSigners(5);
   const factory = await ethers.getContractFactory('RootRegistry', op1);
-  const registry: any = await factory.deploy(op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey);
+  const registry: any = await factory.deploy(op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey, BigInt(ROOT_DELAY), BigInt(PUSH_DELAY));
   await registry.waitForDeployment();
   const lock = (blocks: number, send: () => Promise<unknown>) => withRelativeLock(registry.categoryId, blocks, send);
   const propose = (a: any, b: any, root = rootA, snap = snapA, epoch = 1n) =>
