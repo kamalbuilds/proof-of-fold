@@ -1,0 +1,80 @@
+pragma solidcash ^0.50.0;
+
+event Proposed(int indexed epoch, bytes32 root, bytes32 snapshot);
+event Activated(int indexed epoch, bytes32 root);
+event Cancelled(int indexed epoch);
+event PushOpened(int indexed epoch);
+
+error NotPending();
+error AuditWindowOpen(int needed);
+error EpochNotIncreasing(int epoch, int floor);
+error AlreadyPending(int epoch);
+
+enum Status { Idle, Pending }
+
+// RootRegistry: where FoldClaimPool learns which Merkle root to pay against.
+//
+// A root is proposed by two of three operator keys, then sits in a public audit window of ROOT_DELAY blocks
+// (a relative timelock on this contract's own UTXO, checked by the chain, so no key can shorten it). During the
+// window a separate guardian key can cancel the proposal but can never propose one. Activation is
+// permissionless once the window has passed. Every proposal pins the SHA-256 of the exact F@H API response the
+// root was built from, so anyone can re-fetch it, rebuild the tree and compare.
+contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian) {
+    int constant ROOT_DELAY = 144;      // blocks, about one day
+    int constant PUSH_DELAY = 4032;     // blocks, about four weeks: an active root this old may be pushed
+
+    Status public status;
+    bytes32 public activeRoot;
+    int public activeEpoch;
+    bytes32 public activeSnapshot;
+    bytes32 public pendingRoot;
+    int public pendingEpoch;
+    bytes32 public pendingSnapshot;
+    int public highEpoch;               // highest epoch ever proposed, cancelled ones included
+    int public pushEpoch;               // epoch whose root has been active long enough for operator push
+
+    modifier twoOfThree(sig a, sig b) {
+        require(checkMultiSig([a, b], [op1, op2, op3]));
+        _;
+    }
+
+    modifier onlyGuardian(sig g) {
+        require(checkSig(g, guardian));
+        _;
+    }
+
+    function proposeRoot(sig a, sig b, bytes32 root, bytes32 snapshot, int epoch) twoOfThree(a, b) {
+        require(this.status == Status.Idle, AlreadyPending(this.pendingEpoch));
+        require(epoch > this.highEpoch, EpochNotIncreasing(epoch, this.highEpoch));
+        this.pendingRoot = root;
+        this.pendingSnapshot = snapshot;
+        this.pendingEpoch = epoch;
+        this.highEpoch = epoch;
+        this.status = Status.Pending;
+        emit Proposed(epoch, root, snapshot);
+    }
+
+    function cancelPending(sig g) onlyGuardian(g) {
+        require(this.status == Status.Pending, NotPending());
+        this.status = Status.Idle;
+        emit Cancelled(this.pendingEpoch);
+    }
+
+    function activateRoot() {
+        require(this.status == Status.Pending, NotPending());
+        require(this.age >= ROOT_DELAY, AuditWindowOpen(ROOT_DELAY));
+        this.activeRoot = this.pendingRoot;
+        this.activeSnapshot = this.pendingSnapshot;
+        this.activeEpoch = this.pendingEpoch;
+        this.status = Status.Idle;
+        emit Activated(this.pendingEpoch, this.pendingRoot);
+    }
+
+    function openPush() {
+        require(this.status == Status.Idle, "a proposal is pending");
+        require(this.activeEpoch > this.pushEpoch, "push already open for this epoch");
+        require(this.age >= PUSH_DELAY, AuditWindowOpen(PUSH_DELAY));
+        this.pushEpoch = this.activeEpoch;
+        emit PushOpened(this.activeEpoch);
+    }
+}

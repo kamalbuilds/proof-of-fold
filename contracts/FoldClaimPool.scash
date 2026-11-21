@@ -1,0 +1,107 @@
+pragma solidcash ^0.50.0;
+
+interface IRootRegistry {
+    public bytes32 activeRoot;
+    public int activeEpoch;
+    public int pushEpoch;
+}
+
+event Claimed(bytes32 indexed leafKey, bigint paid, bigint cumulative);
+event Pushed(bytes32 indexed leafKey, bigint paid, bigint cumulative);
+
+error WrongToken();
+error BadProof();
+error NothingToClaim(bigint cumulative, bigint already);
+
+// FoldClaimPool: pull-based FoldingCash reward claims in one CashToken.
+//
+// Leaf = sha256(0x00 | method | identity | cumulative as 8 bytes), node = sha256(0x01 | left | right).
+//   method 0  identity is a locking bytecode (a BCH or token-aware address). Anyone may submit the claim and
+//             the tokens go to exactly that locking bytecode.
+//   method 1  identity is the hash160 of a public key, the legacy 1... address a folder already has. The key
+//             holder signs the claim transaction (the signature covers every output) and picks the
+//             destination; that signature is the link between the legacy address and the BCH payout.
+// Leaves hold cumulative totals, so a claim pays cumulative - already and a user may skip epochs. The claimed
+// mapping is the receipt: one entry per leaf, verified by the chain, absent entries read as 0.
+contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) {
+    int constant MAX_DEPTH = 24;
+    int constant MIN_PUSH = 1000;           // smallest payout the operator may push, in token base units
+
+    bytes32 root;
+    int epoch;
+
+    mapping(bytes32 => bigint) public claimed;
+
+    // Copy the registry's ACTIVE root. The pending one is still in its audit window and is never read.
+    function syncRoot() {
+        int active = IRootRegistry(registry).activeEpoch;
+        require(active > this.epoch, "already in sync");
+        this.root = IRootRegistry(registry).activeRoot;
+        this.epoch = active;
+    }
+
+    function walk(bytes32 leaf, bytes proof, int index) internal view returns (bytes32) {
+        int depth = proof.length / 32;
+        require(proof.length == depth * 32, "bad proof length");
+        require(depth <= MAX_DEPTH, "proof too deep");
+        bytes32 node = leaf;
+        int position = index;
+        for (int k = 0; k < depth; k++) {
+            bytes32 sibling = bytes32(proof.slice(k * 32, k * 32 + 32));
+            if (position % 2 == 0) {
+                node = sha256(0x01 + node + sibling);
+            } else {
+                node = sha256(0x01 + sibling + node);
+            }
+            position = position / 2;
+        }
+        require(position == 0, "index out of range");
+        return node;
+    }
+
+    // Check the leaf against the active root, record the new cumulative total, return what is newly owed.
+    function settle(bytes method, bytes identity, bigint cumulative, bytes proof, int index) internal returns (bigint) {
+        require(index >= 0, "negative index");
+        bytes32 leaf = sha256(0x00 + method + identity + toPaddedBytes(cumulative, 8));
+        require(walk(leaf, proof, index) == this.root, BadProof());
+        bytes32 leafKey = sha256(method + identity);
+        bigint already = this.claimed[leafKey];
+        require(cumulative > already, NothingToClaim(cumulative, already));
+        this.claimed[leafKey] = cumulative;
+        return cumulative - already;
+    }
+
+    // Method 0: anyone submits, the leaf's own locking bytecode is paid.
+    function claim(bytes32 category, bytes identity, bigint cumulative, bytes proof, int index) {
+        require(category == rewardCategory, WrongToken());
+        bigint owed = settle(0x00, identity, cumulative, proof, index);
+        this.tokens[category].transfer(identity, owed);
+        emit Claimed(sha256(0x00 + identity), owed, cumulative);
+    }
+
+    // Method 1: the key behind a legacy address signs, and chooses where the tokens go.
+    function claimWithKey(sig s, pubkey pk, bytes32 category, bytes destination, bigint cumulative, bytes proof, int index) {
+        require(category == rewardCategory, WrongToken());
+        require(checkSig(s, pk));
+        bytes identity = bytes(hash160(pk));
+        bigint owed = settle(0x01, identity, cumulative, proof, index);
+        this.tokens[category].transfer(destination, owed);
+        emit Claimed(sha256(0x01 + identity), owed, cumulative);
+    }
+
+    // Operator push: once a root has been active for the long window (the registry opens it), the operator may pay
+    // a leaf that never claimed, to the leaf's own identity, if the payout clears MIN_PUSH.
+    function push(sig s, bytes32 category, bytes method, bytes identity, bigint cumulative, bytes proof, int index) {
+        require(category == rewardCategory, WrongToken());
+        require(checkSig(s, pusher));
+        require(IRootRegistry(registry).pushEpoch == this.epoch, "push window not open for this epoch");
+        bigint owed = settle(method, identity, cumulative, proof, index);
+        require(owed >= MIN_PUSH, "below the push minimum");
+        if (method == 0x00) {
+            this.tokens[category].transfer(identity, owed);
+        } else {
+            this.tokens[category].transfer(new LockingBytecodeP2PKH(bytes20(identity)), owed);
+        }
+        emit Pushed(sha256(method + identity), owed, cumulative);
+    }
+}

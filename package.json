@@ -1,0 +1,26 @@
+{
+  "name": "foldclaim-sc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FoldingCash pull-based reward claims in SolidCash",
+  "license": "MIT",
+  "scripts": {},
+  "overrides": {
+    "@bitauth/libauth": "file:vendor/bitauth-libauth-3.1.0-next.8.tgz"
+  },
+  "dependencies": {
+    "@bitauth/libauth": "file:vendor/bitauth-libauth-3.1.0-next.8.tgz",
+    "@solidcash/solidc": "0.50.0",
+    "@solidcash/solidcash": "0.50.0",
+    "@solidcash/solidhat": "0.50.0"
+  },
+  "devDependencies": {
+    "@noble/curves": "^1.9.7",
+    "@noble/hashes": "^2.4.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}
