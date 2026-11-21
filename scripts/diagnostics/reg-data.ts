@@ -1,0 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { getDataNftLockingBytecode } from '@solidcash/solidcash/stateful';
+import { lockingBytecodeToCashAddress, hexToBin } from '@bitauth/libauth';
+import { provider as providerOf } from '../../src/chain.ts';
+import { attach, type Deployment } from '../../src/pool-client.ts';
+const d: Deployment = JSON.parse(readFileSync(new URL('../../deployments/chipnet/deployment.json', import.meta.url), 'utf8'));
+const p: any = providerOf('chipnet');
+const { registry } = attach(d, p);
+const data = getDataNftLockingBytecode(d.registry.categoryId, hexToBin(registry.inner.lockingBytecode));
+const addr: any = lockingBytecodeToCashAddress({ bytecode: data, prefix: 'bchtest' } as any);
+console.log('data lock address', addr.address ?? addr);
+for (const u of await p.getUtxos(addr.address ?? addr)) console.log(u.txid.slice(0, 10), u.vout, String(u.satoshis), u.token?.nft?.capability, String(u.token?.nft?.commitment).slice(0, 80), 'h', u.blockHeight);
+process.exit(0);

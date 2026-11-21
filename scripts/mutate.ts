@@ -23,6 +23,8 @@ const MUTATIONS: M[] = [
   { id: 'pool-push-min', file: POOL, find: 'require(owed >= MIN_PUSH, "below the push minimum");', replace: '', test: 'test/pool.test.ts', pattern: 'refuses small payouts and outsiders', guards: 'push minimum' },
   { id: 'pool-sync', file: POOL, find: 'require(active > this.epoch || pushed > this.pushEpoch, "already in sync");', replace: '', test: 'test/pool.test.ts', pattern: 'never reads a pending root', guards: 'sync only when the registry has something new' },
   { id: 'pool-token', file: POOL, find: '    function claim(bytes32 category, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {\n        require(category == rewardCategory, WrongToken());', replace: '    function claim(bytes32 category, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {', test: 'test/pool.test.ts', pattern: 'foreign token parked', guards: 'reward category check on claim (a foreign token parked at the container lock cannot be pulled out)' },
+  { id: 'pool-method', file: POOL, find: 'require(method == 0x00 || method == 0x01, "bad method");', replace: '', test: 'test/pool.test.ts', pattern: 'review finding H1', guards: 'push method byte is exactly 0x00 or 0x01 (no re-splitting of method and identity)' },
+  { id: 'pool-fund', file: POOL, find: 'require(this.outState.tokens[category].tokenAmount > this.tokens[category].tokenAmount, "nothing deposited");', replace: '', test: 'test/pool.test.ts', pattern: 'review finding L2', guards: 'fund must deposit' },
   { id: 'pool-depth', file: POOL, find: 'require(depth <= MAX_DEPTH, "proof too deep");', replace: '', test: 'test/pool.test.ts', pattern: 'deeper than 24', guards: 'proof depth bound' },
 ];
 

@@ -1,0 +1,4 @@
+branch: external-read-relocated-data-nft
+base: eda85a88d752525ab1fe92f03e9dba04a45b518a (master, 0.51.0)
+commit: 6ef2490a1cb09ad9c604c466d44944d8e9f2bd50
+stacked on: nothing (independent of upstream PR #4; also red and green on master plus #4)

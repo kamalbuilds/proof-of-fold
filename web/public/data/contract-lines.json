@@ -11,8 +11,8 @@
   "claimWithKey": "contracts/FoldClaimPool.scash:103",
   "nothingToClaim": "contracts/FoldClaimPool.scash:89",
   "push": "contracts/FoldClaimPool.scash:114",
-  "pushWindow": "contracts/FoldClaimPool.scash:117",
-  "minPush": "contracts/FoldClaimPool.scash:119",
-  "pushDestination": "contracts/FoldClaimPool.scash:122",
+  "pushWindow": "contracts/FoldClaimPool.scash:119",
+  "minPush": "contracts/FoldClaimPool.scash:121",
+  "pushDestination": "contracts/FoldClaimPool.scash:124",
   "minPushUnits": 1000
 }

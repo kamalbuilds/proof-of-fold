@@ -253,5 +253,35 @@
       "tail": " Test Files  1 passed (1) |       Tests  1 passed | 14 skipped (15)"
     },
     "verdict": "killed"
+  },
+  {
+    "id": "pool-method",
+    "guards": "push method byte is exactly 0x00 or 0x01 (no re-splitting of method and identity)",
+    "test": "test/pool.test.ts -t \"review finding H1\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " Test Files  1 failed (1) |       Tests  1 failed | 16 skipped (17) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: operator push > push cannot re-split method and identity to pay a suffix of the leaf (review finding H1) | AssertionError: expected 'messageBus: BCH-2026 preflight failed…' to match /bad method/ | \"messageBus: BCH-2026 preflight failed at input 0: Program failed an OP_VERIFY operation.; failing require in FoldClaimPool:118 (bad identity)\""
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 16 skipped (17)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-fund",
+    "guards": "fund must deposit",
+    "test": "test/pool.test.ts -t \"review finding L2\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (17 tests | 1 failed | 16 skipped) 302ms |  Test Files  1 failed (1) |       Tests  1 failed | 16 skipped (17) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > fund without a deposit is refused, so it cannot be used to lock the pool UTXOs for free (review finding L2) | Error: Implicit burning of fungible tokens for category f01dca5ef01dca5ef01dca5ef01dca5ef01dca5ef01dca5ef01dca5ef01dca5e is not allowed (input amount: "
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 16 skipped (17)"
+    },
+    "verdict": "killed"
   }
 ]

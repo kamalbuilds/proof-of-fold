@@ -143,6 +143,20 @@ switch (step) {
     console.log('registry', registry.address, '\npool    ', pool.address);
     break;
   }
+  case 'redeploy-pool': {
+    // New pool bytecode, same registry. The old pool is kept in previousPools.
+    const d = dep() as any;
+    const s = deployer();
+    const registryData = getDataNftLockingBytecode(d.registry.categoryId, hexToBin(attach(d, p).registry.inner.lockingBytecode));
+    const poolFactory = new ContractFactory(artifacts.poolArtifact, s);
+    const pool: any = await poolFactory.deploy(hexToBin(d.tokenCategory), registryData, hexToBin(d.pusher));
+    await pool.waitForDeployment();
+    await logAndWait('deploy-pool', pool.deploymentTransaction().txid, { category: pool.categoryId, version: 2 });
+    const { fundTxid: _f, ...old } = d.pool;
+    writeJson('deployment.json', { ...d, previousPools: [...(d.previousPools ?? []), { ...d.pool, retiredAt: new Date().toISOString() }], pool: { categoryId: pool.categoryId, address: pool.address, deployTxid: pool.deploymentTransaction().txid } });
+    console.log('pool    ', pool.address);
+    break;
+  }
   case 'fund': {
     const d = dep();
     const s = deployer();

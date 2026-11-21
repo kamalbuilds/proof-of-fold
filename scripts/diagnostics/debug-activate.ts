@@ -5,7 +5,7 @@ import { withRelativeLock } from '../../src/relative-lock.ts';
 import { setFeeRate } from '../../src/fee-rate.ts';
 setFeeRate(2);
 const net = 'chipnet';
-const d: Deployment = JSON.parse(readFileSync(new URL('../../../deployments/chipnet/deployment.json', import.meta.url), 'utf8'));
+const d: Deployment = JSON.parse(readFileSync(new URL('../../deployments/chipnet/deployment.json', import.meta.url), 'utf8'));
 const p = providerOf(net);
 const { registry } = attach(d, p);
 const s = signerOf(net, 'DEPLOYER', p);

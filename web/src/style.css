@@ -288,3 +288,6 @@ input::placeholder { color: var(--muted); }
   .foot-in { grid-template-columns: minmax(0, 1fr); }
   .keys li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
+
+.wblock + .wblock { margin-top: var(--s4); }
+.band h3.sub { color: var(--on-ink); margin-top: 0; }

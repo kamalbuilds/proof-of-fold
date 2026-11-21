@@ -10,7 +10,7 @@ FoldClaim builds its payout leaves from the live sponsor API (`api.folding.cash/
 |---|---|
 | Token | `a1072ff78525d5e612e64905dc320533308397518fb3226692d36745e7ab3471` (tFLDCH, 8 decimals) |
 | RootRegistry | `bchtest:pdxa23mu3k5tpwd6228ajg7zuhsswq27u5ntwdh59cfs8kgx7ytkc45fuvxwz` , category `f3d1b771511b07efa982513fa65f3dd02465c81a4f4b3d9f9fba01f4e001d56b` |
-| FoldClaimPool | `bchtest:pd5h697k0wgde8l3gpfspeylls4vjcxewzr3h6q0u0rgevg6rf0hvwgk6urss` , category `146333432ea2cc8954cecf0e6c76aa144475ed2f6c6c3116b0c40e44da32d6c8` |
+| FoldClaimPool | `bchtest:pdx85dqzxjlqjg47se7grq7lmtpanfzfuwpehfc5akpsuys9uelju4ttx8vxv` , category `fab5154f9ab557ab05ae183e479c56124033e57f6b8af244bfc019673b676fda` |
 | Windows | audit 6 and push 12 (constructor arguments; the contract measures them with the chain's relative timelock) |
 | Epoch 1 root | `a890b9cc68b773c429b13654bcc39771d017eac75a1ac22d17b6f9420eb697f8` over 206 leaves, depth 8 |
 | Snapshot | `https://api.folding.cash/v1/GetDistro?startDate=11-01-2026&endDate=11-20-2026&amount=1000000`, SHA-256 `d13b3ec2f81cd10e1ccf9308966821f9b72cf108cc1271765f514364d47fb4ab` |
@@ -18,21 +18,17 @@ FoldClaim builds its payout leaves from the live sponsor API (`api.folding.cash/
 | Step | Transaction |
 |---|---|
 | Registry genesis | [`5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1`](https://chipnet.imaginary.cash/tx/5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1) |
-| Pool genesis | [`c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca`](https://chipnet.imaginary.cash/tx/c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca) |
-| Pool funded | [`de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585`](https://chipnet.imaginary.cash/tx/de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585) |
+| Pool genesis | [`51602319eeb32387bbbf65b5c8ef7178590ebe9a939441171fd08a9ff66eb8dd`](https://chipnet.imaginary.cash/tx/51602319eeb32387bbbf65b5c8ef7178590ebe9a939441171fd08a9ff66eb8dd) |
+| Pool funded | [`04f4cbcbdee053014e871ef70ec468d05ed7e0692a6fdffc3c0791da8170dc86`](https://chipnet.imaginary.cash/tx/04f4cbcbdee053014e871ef70ec468d05ed7e0692a6fdffc3c0791da8170dc86) |
 | Epoch 1 proposed by two operators | [`d51db6e2b8788a73e7be747fab4354c14cd786f7f70e1e9ba687a94f1151ee27`](https://chipnet.imaginary.cash/tx/d51db6e2b8788a73e7be747fab4354c14cd786f7f70e1e9ba687a94f1151ee27) |
 | Epoch 1 activated after the audit window | [`d1ae9eef08f4d2d32dfc73c6c3a5b70f1ad5116576ade59de4c29e33dfbeb209`](https://chipnet.imaginary.cash/tx/d1ae9eef08f4d2d32dfc73c6c3a5b70f1ad5116576ade59de4c29e33dfbeb209) |
-| Pool synced to epoch 1 | [`a295c737825a7cbaa54ac379ce930235f39f42410dbefe596a8e0dcc2ca28b6c`](https://chipnet.imaginary.cash/tx/a295c737825a7cbaa54ac379ce930235f39f42410dbefe596a8e0dcc2ca28b6c) |
-| Claim from the command line, demo claimer 149 | [`d779eefee38b3dd74fd1aa629fe8eea24e77b193b589d77a2590d84181e52b2d`](https://chipnet.imaginary.cash/tx/d779eefee38b3dd74fd1aa629fe8eea24e77b193b589d77a2590d84181e52b2d) |
-| Claim from the browser, demo claimer 0 | [`d6139ea3f2e93ab9fda6c959ad979ec4a8bc7f1823f796362ab6d618aa4f5c87`](https://chipnet.imaginary.cash/tx/d6139ea3f2e93ab9fda6c959ad979ec4a8bc7f1823f796362ab6d618aa4f5c87) |
 | Epoch 2 proposed | [`25939f03c701e1dfbcd0dab9c2af7cf07091f7fbeea595c614629797d2ad462f`](https://chipnet.imaginary.cash/tx/25939f03c701e1dfbcd0dab9c2af7cf07091f7fbeea595c614629797d2ad462f) |
 | Epoch 2 cancelled by the guardian | [`28e744293a1832840df9b9faff4354b123ef96e778a8b352352e0fe361a888fa`](https://chipnet.imaginary.cash/tx/28e744293a1832840df9b9faff4354b123ef96e778a8b352352e0fe361a888fa) |
 | Epoch 3 proposed | [`b738b6f492f9ba4efd598da880b11efeeaa966897c0006a7f7063e85ad11c4a4`](https://chipnet.imaginary.cash/tx/b738b6f492f9ba4efd598da880b11efeeaa966897c0006a7f7063e85ad11c4a4) |
-| Epoch 3 activated | pending |
-| Pool synced to epoch 3 | pending |
-| Epoch 3 claim, only the difference | pending |
-| Registry opens the push window | pending |
-| Operator push | pending |
+| Epoch 3 activated | [`5c4631caa3934ef936f36d6a6c9bd0594f73cb57b109003559181ef7738e1e71`](https://chipnet.imaginary.cash/tx/5c4631caa3934ef936f36d6a6c9bd0594f73cb57b109003559181ef7738e1e71) |
+| Pool synced to epoch 3 | [`c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681`](https://chipnet.imaginary.cash/tx/c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681) |
+| Claim from the command line, demo claimer 149 | [`c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573`](https://chipnet.imaginary.cash/tx/c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573) |
+| Epoch 4 proposed | [`02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446`](https://chipnet.imaginary.cash/tx/02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446) |
 
 Every transaction can be read back with `npx tsx scripts/tx.ts chipnet <txid>`.
 
@@ -83,11 +79,11 @@ Measured claim size under production limits, by proof depth (real accepted claim
 | Custom errors | `contracts/RootRegistry.scash:8`, `contracts/FoldClaimPool.scash:20` |
 | Internal functions, loops | `contracts/FoldClaimPool.scash:61`, `contracts/FoldClaimPool.scash:83`, `contracts/FoldClaimPool.scash:67` |
 | Constants | `contracts/FoldClaimPool.scash:35` |
-| Locking bytecode construction | `contracts/FoldClaimPool.scash:122` |
+| Locking bytecode construction | `contracts/FoldClaimPool.scash:124` |
 
 ## Tests
 
-49 of 49 SolidHat tests pass on a mock network that enforces the BCH production limits (10,000 byte inputs, 100,000 byte transactions, dust and relay rules). 17 of 17 guard mutations are killed: break the guard, the named test turns red, restore it, green. See TESTS.md.
+49 of 49 SolidHat tests pass on a mock network that enforces the BCH production limits (10,000 byte inputs, 100,000 byte transactions, dust and relay rules). 19 of 19 guard mutations are killed: break the guard, the named test turns red, restore it, green. See TESTS.md.
 
 ## Run it
 

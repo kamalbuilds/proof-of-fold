@@ -9,9 +9,10 @@ const epoch = J(`${dir}/epoch-1.json`);
 const txs: any[] = read(`${dir}/txs.jsonl`).trim().split('\n').map((l) => JSON.parse(l));
 const find = (what: string) => txs.filter((t) => t.what === what);
 const first = (what: string) => find(what)[0]?.txid;
-const at = (what: string, i: number) => find(what)[i]?.txid;
+const at = (what: string, i: number, pool?: number) => find(what).filter((t) => pool === undefined || t.pool === undefined || t.pool === pool)[i]?.txid;
+const latest = (what: string) => { const l = find(what).filter((t) => t.pool === undefined || t.pool === 2); return l[l.length - 1]?.txid; };
 const explorer = net === 'mainnet' ? 'https://blockchair.com/bitcoin-cash/transaction/' : 'https://chipnet.imaginary.cash/tx/';
-const link = (txid?: string) => (txid ? `[\`${txid}\`](${explorer}${txid})` : 'pending');
+const link = (txid?: string) => (txid ? `[\`${txid}\`](${explorer}${txid})` : 'MISSING');
 const reg = read('contracts/RootRegistry.scash').split('\n');
 const pool = read('contracts/FoldClaimPool.scash').split('\n');
 const ln = (src: string[], re: RegExp) => { const i = src.findIndex((l) => re.test(l)); if (i < 0) throw new Error('anchor missing: ' + re); return i + 1; };
@@ -49,19 +50,21 @@ FoldClaim builds its payout leaves from the live sponsor API (\`api.folding.cash
 | Step | Transaction |
 |---|---|
 | Registry genesis | ${link(at('deploy-registry', 0))} |
-| Pool genesis | ${link(at('deploy-pool', 0))} |
-| Pool funded | ${link(at('fund-pool', 0))} |
+| Pool genesis | ${link(at('deploy-pool', 0, 2))} |
+| Pool funded | ${link(at('fund-pool', 0, 2))} |
 | Epoch 1 proposed by two operators | ${link(at('propose-root', 0))} |
 | Epoch 1 activated after the audit window | ${link(at('activate-root', 0))} |
-| Pool synced to epoch 1 | ${link(at('sync-root', 0))} |
-| Claim from the command line, demo claimer 149 | ${link(at('claim-demo', 0))} |
-| Claim from the browser, demo claimer 0 | ${link(at('claim-browser', 0))} |
 | Epoch 2 proposed | ${link(at('propose-root', 1))} |
 | Epoch 2 cancelled by the guardian | ${link(at('cancel-pending', 0))} |
 | Epoch 3 proposed | ${link(at('propose-root', 2))} |
 | Epoch 3 activated | ${link(at('activate-root', 1))} |
-| Pool synced to epoch 3 | ${link(at('sync-root', 1))} |
-| Epoch 3 claim, only the difference | ${link(at('claim-demo-delta', 0))} |
+| Pool synced to epoch 3 | ${link(at('sync-root', 0, 2))} |
+| Claim from the command line, demo claimer 149 | ${link(at('claim-demo', 0, 2))} |
+| Claim from the browser | ${link(at('claim-browser', 0, 2))} |
+| Epoch 4 proposed | ${link(at('propose-root', 3))} |
+| Epoch 4 activated | ${link(at('activate-root', 2))} |
+| Pool synced to epoch 4 | ${link(at('sync-root', 1, 2))} |
+| Epoch 4 claim, only the difference | ${link(at('claim-demo-delta', 0, 2))} |
 | Registry opens the push window | ${link(at('open-push', 0))} |
 | Operator push | ${link(at('push', 0))} |
 
@@ -146,5 +149,7 @@ Layout: \`contracts/\` (SolidCash), \`src/\` (Merkle tree, snapshot builder, poo
 
 Three pull-request packages for solidcash/solidcash are prepared in \`upstream/\`, each with a failing-then-passing test: the libauth git dependency that blocks \`npm install\` under \`allow-git=none\`, a Merkle pull-claim example with a showcase entry, and tests for the stateful \`this.age\` sequence. See \`upstream/README.md\`.
 `;
-writeFileSync(new URL('../README.md', import.meta.url), out);
+const missing = out.split('\n').filter((l) => l.includes('MISSING'));
+if (missing.length) console.log('rows without a transaction yet:', missing.length);
+writeFileSync(new URL('../README.md', import.meta.url), out.split('\n').filter((l) => !l.includes('MISSING')).join('\n'));
 console.log('README.md written');

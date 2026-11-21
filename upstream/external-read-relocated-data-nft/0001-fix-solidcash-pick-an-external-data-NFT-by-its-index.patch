@@ -1,0 +1,171 @@
+From 6ef2490a1cb09ad9c604c466d44944d8e9f2bd50 Mon Sep 17 00:00:00 2001
+From: kamalbuilds <geniusamansingh@gmail.com>
+Date: Sun, 22 Nov 2026 00:22:23 +0530
+Subject: [PATCH] fix(solidcash): pick an external data NFT by its index tag,
+ not by vout
+
+A read of another stateful contract co-spends its data NFTs and re-creates them in the reader's
+transaction, so only the NFTs the read needs move, and their vouts there need not be below the
+vouts of the ones left in the owner's own transaction. _findExternalDataNft sorted every data NFT at
+the owner's data-NFT address by vout and took position nftIndex, so after one read it could return
+the wrong NFT (index 1 for index 0), and the next read failed with OP_VERIFY although the owner's
+state had not changed. Use StateReader.findDataNfts with the external's own layout, which orders an
+index-tagged layout by the tag in each commitment and keeps vout order for an untagged singleton.
+---
+ .../src/stateful/StatefulContract.ts          |  11 +-
+ .../e2e/ExternalReadRelocatedDataNft.test.ts  | 108 ++++++++++++++++++
+ 2 files changed, 117 insertions(+), 2 deletions(-)
+ create mode 100644 packages/solidcash/test/e2e/ExternalReadRelocatedDataNft.test.ts
+
+diff --git a/packages/solidcash/src/stateful/StatefulContract.ts b/packages/solidcash/src/stateful/StatefulContract.ts
+index 05c5273ab..c6ef54cf6 100644
+--- a/packages/solidcash/src/stateful/StatefulContract.ts
++++ b/packages/solidcash/src/stateful/StatefulContract.ts
+@@ -175,7 +175,9 @@ import {
+ } from './StatefulTransactionBuilder.js';
+ import type { StandInCaller } from './stb-materialize-caller-edge-outputs.js';
+ import { legacyIsPublishJobEventName } from './legacy-planning-heuristics.js';
+-import { type OnChainState, type ParsedEvent, type EventFilter } from './StateReader.js';
++import {
++  StateReader, type OnChainState, type ParsedEvent, type EventFilter,
++} from './StateReader.js';
+ import {
+   getDataNftAddress,
+   getEntryNftAddress,
+@@ -14467,13 +14469,18 @@ export class StatefulContract<TArtifact extends Artifact = Artifact> {
+ 
+   /**
+    * Find an external data NFT UTXO at a specific nftIndex.
+-   * Data NFTs are sorted by vout; the nftIndex corresponds to their position.
++   * An index-tagged layout carries the index in each commitment, so the data NFTs are ordered by that tag: after a
++   * read re-creates some of them in another transaction their vouts no longer follow the index. An untagged
++   * singleton layout is ordered by vout.
+    */
+   private async _findExternalDataNft(
+     dataNftAddress: string, externalCategoryId: string, nftIndex: number,
+   ): Promise<Utxo | undefined> {
+     try {
+       const utxos = await this.inner.provider.getUtxos(dataNftAddress);
++      const layout = [...this._externalRegistry.values()]
++        .find((external) => external.categoryId === externalCategoryId)?.inner.artifact.stateLayout;
++      if (layout) return new StateReader(layout).findDataNfts(utxos, externalCategoryId)[nftIndex];
+       const dataNfts = utxos
+         .filter((u) => (
+           u.token
+diff --git a/packages/solidcash/test/e2e/ExternalReadRelocatedDataNft.test.ts b/packages/solidcash/test/e2e/ExternalReadRelocatedDataNft.test.ts
+new file mode 100644
+index 000000000..b4c1eff32
+--- /dev/null
++++ b/packages/solidcash/test/e2e/ExternalReadRelocatedDataNft.test.ts
+@@ -0,0 +1,108 @@
++import { describe, expect, it } from 'vitest';
++import { hexToBin } from '@bitauth/libauth';
++import { compileString } from '../direct-compile.js';
++import { Contract, SignatureTemplate } from '../../src/index.js';
++import { StatefulContract, getDataNftLockingBytecode } from '../../src/stateful/index.js';
++import MockNetworkProvider from '../../src/network/MockNetworkProvider.js';
++import { alicePkh, alicePriv, alicePub } from '../fixture/vars.js';
++import type { Utxo } from '../../src/interfaces.js';
++import p2pkhArtifact from '../fixture/p2pkh.artifact.js';
++
++// B reads A's public state through an interface. The read co-spends A's data NFTs and re-creates them in B's
++// transaction, so after one read they sit in B's transaction output, not in A's last own transaction.
++const OWNER = `pragma solidcash >=0.8.0;
++contract Owner() {
++  int public epoch;
++  bytes32 public root;
++  bytes32 public s1;
++  bytes32 public s2;
++  bytes32 public s3;
++  function publish(bytes32 x) {
++    this.root = x;
++    this.s1 = x;
++    this.s2 = x;
++    this.s3 = x;
++    this.epoch = this.epoch + 1;
++  }
++}`;
++
++const READER = `pragma solidcash >=0.8.0;
++interface IOwner {
++  public int epoch;
++  public bytes32 root;
++  public bytes32 s1;
++  public bytes32 s2;
++  public bytes32 s3;
++}
++contract Reader(address owner) {
++  int count;
++  function sync() {
++    require(IOwner(owner).epoch == 1, "owner epoch");
++    this.count = this.count + 1;
++  }
++}`;
++
++const outcome = (send: Promise<unknown>): Promise<string> => send.then(
++  () => 'accepted',
++  (error: unknown) => String((error as Error)?.message ?? error),
++);
++
++async function setup() {
++  const provider = new MockNetworkProvider();
++  const p2pkh = new Contract(p2pkhArtifact, [alicePkh], { provider });
++  const funder = p2pkh.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
++  let n = 0;
++  const deploy = async (artifact: any, args: any[], initialState: Record<string, any>) => {
++    const fundingUtxo: Utxo = { txid: (0xa0 + n++).toString(16).repeat(32), vout: 0, satoshis: 200_000n };
++    await provider.addUtxo(p2pkh.address, fundingUtxo);
++    const { contract } = await StatefulContract.deploy(artifact, args, {
++      provider, fundingUtxo, funder, initialState, changeAddress: p2pkh.address, initialBalance: 50_000n,
++    } as any);
++    return contract as any;
++  };
++  const ownerArtifact = compileString(OWNER);
++  const readerArtifact = compileString(READER);
++  const owner = await deploy(ownerArtifact, [], { epoch: 0n, root: new Uint8Array(32), s1: new Uint8Array(32), s2: new Uint8Array(32), s3: new Uint8Array(32) });
++  const ownerData = getDataNftLockingBytecode(owner.categoryId, hexToBin(owner.inner.lockingBytecode));
++  const newReader = async () => {
++    const deployed = await deploy(readerArtifact, [ownerData], { count: 0n });
++    return StatefulContract.withCategory(deployed.inner, deployed.categoryId, {
++      externalContracts: { IOwner: { artifact: owner.inner.artifact, categoryId: owner.categoryId, constructorArgs: [] } },
++    } as any) as any;
++  };
++  return { provider, owner, newReader };
++}
++
++describe('an external read of another contract whose data NFTs an earlier read moved', () => {
++  it('reads again with no owner transaction in between', async () => {
++    const { owner, newReader } = await setup();
++    await owner.call.publish(new Uint8Array(32).fill(7)).send();
++    const reader = await newReader();
++
++    expect(await outcome(reader.call.sync().send())).toBe('accepted');
++    expect(await outcome(reader.call.sync().send())).toBe('accepted');
++    expect(((await reader.getState()) as { count: bigint }).count).toBe(2n);
++  });
++
++  it('reads from a second reader after the first moved the data NFTs', async () => {
++    const { owner, newReader } = await setup();
++    await owner.call.publish(new Uint8Array(32).fill(7)).send();
++    const first = await newReader();
++    const second = await newReader();
++
++    expect(await outcome(first.call.sync().send())).toBe('accepted');
++    expect(await outcome(second.call.sync().send())).toBe('accepted');
++    expect(((await second.getState()) as { count: bigint }).count).toBe(1n);
++  });
++
++  it('keeps the owner usable after readers moved its data NFTs', async () => {
++    const { owner, newReader } = await setup();
++    await owner.call.publish(new Uint8Array(32).fill(7)).send();
++    const reader = await newReader();
++    expect(await outcome(reader.call.sync().send())).toBe('accepted');
++
++    expect(((await owner.getState()) as { epoch: bigint }).epoch).toBe(1n);
++    await owner.call.publish(new Uint8Array(32).fill(9)).send();
++    expect(((await owner.getState()) as { epoch: bigint }).epoch).toBe(2n);
++  });
++});
+-- 
+2.52.0
+

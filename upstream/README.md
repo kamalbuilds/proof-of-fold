@@ -1,6 +1,6 @@
 # Upstream pull-request packages for github.com/solidcash/solidcash
 
-Three packages, nothing opened, pushed or posted. Base for all three: `eda85a88d752525ab1fe92f03e9dba04a45b518a` (master, 0.51.0).
+Four packages, nothing opened, pushed or posted. Base for all three: `eda85a88d752525ab1fe92f03e9dba04a45b518a` (master, 0.51.0).
 The clone is `upstream/work/solidcash` (gitignored, its `origin` removed). Each directory holds `branch.txt`, a `0001-*.patch`
 from `git format-patch`, `PR.md`, `RESULTS.md` with the captured red and green runs, and `test/`.
 
@@ -8,6 +8,7 @@ from `git format-patch`, `PR.md`, `RESULTS.md` with the captured red and green r
 | --- | --- | --- | --- |
 | `libauth-git-dependency/` | `libauth-git-dependency` (73d0f2240) | four package manifests, root `package.json`, `yarn.lock`, `scripts/check-installable-without-git.mjs` | nothing |
 | `stateful-this-age-sequence/` | `stateful-this-age-sequence` (dad668cd7) | one new test file | upstream PR #4 (`setSequence`, head 5b52811f) |
+| `external-read-relocated-data-nft/` | `external-read-relocated-data-nft` (6ef2490a1) | `StatefulContract._findExternalDataNft` (one file), one new test file | nothing (also red and green with #4) |
 | `merkle-pull-claim-example/` | `merkle-pull-claim-example` (4acf8ce9d) | `examples/merkle_pull_claim/`, one testing-suite test, `website/docs/showcase.md` | upstream PR #4 |
 
 Upstream PR #4 already adds `setSequence(n)` to a stateful call, so the third item is a test-only follow-up on top of it and the
@@ -23,7 +24,7 @@ git am ../../<name>/0001-*.patch
 ```
 
 Each patch also applies on the base alone (`git apply --check` was run); the stacked tests are red there, by design.
-Once #4 is merged, skip the prereq step. `git am` was run for all three on fresh clones in /tmp.
+Once #4 is merged, skip the prereq step. `git am` was run for all four on fresh clones in /tmp.
 
 ## Verification route
 
@@ -39,6 +40,7 @@ were made in that scratch copy and fetched into the clone; the scratch copy is /
 | libauth | the check script on master: EALLOWGIT, plus the four declaring packages named | with the seven `@mem-cash/*@0.0.11` tarballs repacked with the same one-line change |
 | this.age tests | master without #4: `setSequence is not a function` (3 of 3), and `setSequence` made a no-op | master plus #4: 5 of 5 |
 | example | example missing; example present without #4; four guard removals | master plus #4: 6 of 6 |
+| external read | master and master plus #4: second read of a relocated data NFT fails with `Program failed an OP_VERIFY operation` (2 of 3) | with the fix: 3 of 3; 96 existing external-contract tests pass |
 
 ## Not verified
 
@@ -49,4 +51,5 @@ were made in that scratch copy and fetched into the clone; the scratch copy is /
 - this.age tests: the mock network only; `_pinMasterSequence` is untested by #4 and by this patch (mutation stays green, see RESULTS.md).
 - example: `push` and `openPush` are not exercised; `cumulative > already` is not covered (mutation survives); the SDK and testing
   suite run from a scratch build, not the maintainers' yarn layout; the showcase page is a draft page of CashScript projects.
-- None of the three was run against a real node, chipnet or mainnet.
+- external read: mock network only, not chipnet; a layout with one data NFT cannot show it; the whole solidcash suite was not run (12 external-contract files were).
+- None of the four was run against a real node, chipnet or mainnet.

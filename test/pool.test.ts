@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { SignatureTemplate } from '@solidcash/solidcash';
 import { setup, publish, claim, claimKey, tokensAt, outcome, MerkleTree, mine, hexToBin, ASSET, OTHER, POOL_TOKENS, PUSH_DELAY, leafKey, p2pkhLock, sig, ecdsa, withRelativeLock } from './helpers.js';
 import { u64le } from '../src/merkle.js';
+import { concatBytes } from '@noble/hashes/utils.js';
 
 const tree0 = (c: Awaited<ReturnType<typeof setup>>) => new MerkleTree(c.entries);
 
@@ -105,6 +106,11 @@ describe('FoldClaimPool: method 0 (BCH address leaf)', () => {
     expect(await tokensAt(c, c.entries[0].identity)).toBe(5_000n);
   });
 
+  it('fund without a deposit is refused, so it cannot be used to lock the pool UTXOs for free (review finding L2)', async () => {
+    const c = await setup();
+    expect(await outcome(c.pool.connect(c.mallory).call.fund(hexToBin(ASSET)).send())).toMatch(/nothing deposited/);
+  });
+
   it('refuses a claim larger than the pool holds', async () => {
     const c = await setup();
     const rich = c.entries.map((e, i) => ({ ...e, cumulative: i === 0 ? POOL_TOKENS + 1n : e.cumulative }));
@@ -195,6 +201,22 @@ describe('FoldClaimPool: operator push', () => {
     // the receipt is shared: neither a second push nor the owner's own claim pays again
     expect(await outcome(push(c, c.op1, tree, 1))).not.toBe('accepted');
     expect(await outcome(claim(c, c.bob, tree, 1))).not.toBe('accepted');
+    expect(await tokensAt(c, c.entries[1].identity)).toBe(12_345n);
+  });
+
+  it('push cannot re-split method and identity to pay a suffix of the leaf (review finding H1)', async () => {
+    const c = await setup();
+    const tree = tree0(c);
+    await publish(c, tree, 1n);
+    await openWindow(c);
+    const lock = tree.entries[1].identity;                       // method 0 leaf: 0x00 | lock
+    const suffix = lock.slice(-1);                                // one trailing byte, a bare script anyone could spend
+    const bogusMethod = concatBytes(Uint8Array.of(0), lock.slice(0, -1));
+    const call = c.pool.connect(c.op1).call.push(sig(c.op1), hexToBin(ASSET), bogusMethod, suffix, leafKey(tree.entries[1]),
+      12_345n, tree.proof(1).proofBytes, 1n).tokenContainerTransfer(ASSET, suffix, 12_345n);
+    expect(await outcome(call.send())).toMatch(/bad method/);
+    expect(await tokensAt(c, suffix)).toBe(0n);
+    expect(await outcome(claim(c, c.bob, tree, 1))).toBe('accepted');           // Bob still claims his own leaf
     expect(await tokensAt(c, c.entries[1].identity)).toBe(12_345n);
   });
 

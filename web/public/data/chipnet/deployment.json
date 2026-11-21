@@ -16,10 +16,10 @@
     "deployTxid": "5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1"
   },
   "pool": {
-    "categoryId": "146333432ea2cc8954cecf0e6c76aa144475ed2f6c6c3116b0c40e44da32d6c8",
-    "address": "bchtest:pd5h697k0wgde8l3gpfspeylls4vjcxewzr3h6q0u0rgevg6rf0hvwgk6urss",
-    "deployTxid": "c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca",
-    "fundTxid": "de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585"
+    "categoryId": "fab5154f9ab557ab05ae183e479c56124033e57f6b8af244bfc019673b676fda",
+    "address": "bchtest:pdx85dqzxjlqjg47se7grq7lmtpanfzfuwpehfc5akpsuys9uelju4ttx8vxv",
+    "deployTxid": "51602319eeb32387bbbf65b5c8ef7178590ebe9a939441171fd08a9ff66eb8dd",
+    "fundTxid": "04f4cbcbdee053014e871ef70ec468d05ed7e0692a6fdffc3c0791da8170dc86"
   },
   "fundedBurners": {
     "sats": "30000",
@@ -29,5 +29,14 @@
       2,
       3
     ]
-  }
+  },
+  "previousPools": [
+    {
+      "categoryId": "146333432ea2cc8954cecf0e6c76aa144475ed2f6c6c3116b0c40e44da32d6c8",
+      "address": "bchtest:pd5h697k0wgde8l3gpfspeylls4vjcxewzr3h6q0u0rgevg6rf0hvwgk6urss",
+      "deployTxid": "c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca",
+      "fundTxid": "de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585",
+      "retiredAt": "2026-11-21T18:25:47.356Z"
+    }
+  ]
 }

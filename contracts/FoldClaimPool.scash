@@ -44,7 +44,7 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
     // Anyone may add reward tokens. The SDK call adds the token input and declares the amount the container keeps.
     function fund(bytes32 category) {
         require(category == rewardCategory, WrongToken());
-        require(this.tokens[category].tokenAmount >= 0, "no container");
+        require(this.outState.tokens[category].tokenAmount > this.tokens[category].tokenAmount, "nothing deposited");
     }
 
     // Copy the registry's ACTIVE root and push-window epoch. The pending root is still in its audit window and is
@@ -114,6 +114,8 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
     function push(sig s, bytes32 category, bytes method, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
         require(category == rewardCategory, WrongToken());
         require(checkSig(s, pusher));
+        require(method == 0x00 || method == 0x01, "bad method");
+        require(method == 0x00 || identity.length == 20, "bad identity");
         require(this.pushEpoch == this.epoch, "push window not open for this epoch");
         bigint owed = settle(method, identity, leafKey, cumulative, proof, index);
         require(owed >= MIN_PUSH, "below the push minimum");
