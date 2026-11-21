@@ -1,0 +1,566 @@
+From 4acf8ce9d7951ddba3039733dad3c63ff1ae8c54 Mon Sep 17 00:00:00 2001
+From: kamalbuilds <geniusamansingh@gmail.com>
+Date: Sat, 21 Nov 2026 18:30:34 +0530
+Subject: [PATCH] feat(examples): merkle_pull_claim, a Merkle root registry and
+ a pull-claim pool
+
+RootRegistry takes a payout root from two of three operator keys, holds it through an audit window
+the chain enforces with this.age, and activates it for anyone once the window has passed; a guardian
+key can cancel a pending root. FoldClaimPool pays each leaf of the active root once, as the
+difference to what the leaf already claimed, to its own locking bytecode (method 0) or to the
+destination its legacy key signs for (method 1), and keeps the receipt in a mapping.
+
+The test lives in examples/testing-suite: it compiles both contracts and runs the window, a
+cancel, a stranger relaying a claim, forged claims and a cumulative top-up on the mock network.
+Activating a root uses setSequence, so this builds on the stateful setSequence call option.
+---
+ .../merkle_pull_claim/FoldClaimPool.scash     | 127 +++++++++++
+ examples/merkle_pull_claim/README.md          |  35 ++++
+ examples/merkle_pull_claim/RootRegistry.scash |  80 +++++++
+ examples/merkle_pull_claim/merkle.ts          |  51 +++++
+ .../test/merkle_pull_claim.test.ts            | 197 ++++++++++++++++++
+ website/docs/showcase.md                      |   4 +
+ 6 files changed, 494 insertions(+)
+ create mode 100644 examples/merkle_pull_claim/FoldClaimPool.scash
+ create mode 100644 examples/merkle_pull_claim/README.md
+ create mode 100644 examples/merkle_pull_claim/RootRegistry.scash
+ create mode 100644 examples/merkle_pull_claim/merkle.ts
+ create mode 100644 examples/testing-suite/test/merkle_pull_claim.test.ts
+
+diff --git a/examples/merkle_pull_claim/FoldClaimPool.scash b/examples/merkle_pull_claim/FoldClaimPool.scash
+new file mode 100644
+index 000000000..bdf26a8f4
+--- /dev/null
++++ b/examples/merkle_pull_claim/FoldClaimPool.scash
+@@ -0,0 +1,127 @@
++pragma solidcash ^0.51.0;
++
++interface IRootRegistry {
++    public bytes32 activeRoot;
++    public int activeEpoch;
++    public int pushEpoch;
++    public bytes32 activeSnapshot;
++    public Status status;
++    public bytes32 pendingRoot;
++    public int pendingEpoch;
++    public bytes32 pendingSnapshot;
++    public int highEpoch;
++}
++
++event Claimed(bytes32 indexed leafKey, bigint paid, bigint cumulative);
++event Pushed(bytes32 indexed leafKey, bigint paid, bigint cumulative);
++
++enum Status { Idle, Pending }
++
++error WrongToken();
++error BadProof();
++error NothingToClaim(bigint cumulative, bigint already);
++
++// FoldClaimPool: pull-based FoldingCash reward claims in one CashToken.
++//
++// Leaf = sha256(0x00 | method | identity | cumulative as 8 bytes), node = sha256(0x01 | left | right).
++//   method 0  identity is a locking bytecode (a BCH or token-aware address). Anyone may submit the claim and
++//             the tokens go to exactly that locking bytecode.
++//   method 1  identity is the hash160 of a public key, the legacy 1... address a folder already has. The key
++//             holder signs the claim transaction (the signature covers every output) and picks the
++//             destination; that signature is the link between the legacy address and the BCH payout.
++// Leaves hold cumulative totals, so a claim pays cumulative - already and a user may skip epochs. The claimed
++// mapping is the receipt: one entry per leaf, verified by the chain, absent entries read as 0.
++contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) {
++    int constant MAX_DEPTH = 24;
++    int constant MIN_PUSH = 1000;           // smallest payout the operator may push, in token base units
++
++    bytes32 root;
++    int epoch;
++    int pushEpoch;      // the registry's push-window epoch as of the last sync
++
++    mapping(bytes32 => bigint) public claimed;
++
++    // Anyone may add reward tokens. The SDK call adds the token input and declares the amount the container keeps.
++    function fund(bytes32 category) {
++        require(category == rewardCategory, WrongToken());
++        require(this.tokens[category].tokenAmount >= 0, "no container");
++    }
++
++    // Copy the registry's ACTIVE root and push-window epoch. The pending root is still in its audit window and is
++    // never read. Anyone may call this; it fails unless the registry has something new.
++    function syncRoot() {
++        int active = IRootRegistry(registry).activeEpoch;
++        int pushed = IRootRegistry(registry).pushEpoch;
++        require(active > this.epoch || pushed > this.pushEpoch, "already in sync");
++        this.root = IRootRegistry(registry).activeRoot;
++        this.epoch = active;
++        this.pushEpoch = pushed;
++    }
++
++    function walk(bytes32 leaf, bytes proof, int index) internal view returns (bytes32) {
++        int depth = proof.length / 32;
++        require(proof.length == depth * 32, "bad proof length");
++        require(depth <= MAX_DEPTH, "proof too deep");
++        bytes32 node = leaf;
++        int position = index;
++        for (int k = 0; k < depth; k++) {
++            bytes32 sibling = bytes32(proof.slice(k * 32, k * 32 + 32));
++            if (position % 2 == 0) {
++                node = sha256(0x01 + node + sibling);
++            } else {
++                node = sha256(0x01 + sibling + node);
++            }
++            position = position / 2;
++        }
++        require(position == 0, "index out of range");
++        return node;
++    }
++
++    // Check the leaf against the active root, record the new cumulative total, return what is newly owed.
++    // The receipt key is passed in by the caller so the SDK can derive the mapping entry from a plain argument; the
++    // contract proves it is the right one.
++    function settle(bytes method, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) internal returns (bigint) {
++        require(index >= 0, "negative index");
++        require(leafKey == sha256(method + identity), "wrong receipt key");
++        bytes32 leaf = sha256(0x00 + method + identity + toPaddedBytes(cumulative, 8));
++        require(walk(leaf, proof, index) == this.root, BadProof());
++        bigint already = this.claimed[leafKey];
++        require(cumulative > already, NothingToClaim(cumulative, already));
++        this.claimed[leafKey] = cumulative;
++        return cumulative - already;
++    }
++
++    // Method 0: anyone submits, the leaf's own locking bytecode is paid.
++    function claim(bytes32 category, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
++        require(category == rewardCategory, WrongToken());
++        bigint owed = settle(0x00, identity, leafKey, cumulative, proof, index);
++        this.tokens[category].transfer(identity, owed);
++        emit Claimed(leafKey, owed, cumulative);
++    }
++
++    // Method 1: the key behind a legacy address signs, and chooses where the tokens go.
++    function claimWithKey(sig s, pubkey pk, bytes32 category, bytes destination, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
++        require(category == rewardCategory, WrongToken());
++        require(checkSig(s, pk));
++        bytes identity = bytes(hash160(pk));
++        bigint owed = settle(0x01, identity, leafKey, cumulative, proof, index);
++        this.tokens[category].transfer(destination, owed);
++        emit Claimed(leafKey, owed, cumulative);
++    }
++
++    // Operator push: once a root has been active for the long window (the registry opens it), the operator may pay
++    // a leaf that never claimed, to the leaf's own identity, if the payout clears MIN_PUSH.
++    function push(sig s, bytes32 category, bytes method, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
++        require(category == rewardCategory, WrongToken());
++        require(checkSig(s, pusher));
++        require(this.pushEpoch == this.epoch, "push window not open for this epoch");
++        bigint owed = settle(method, identity, leafKey, cumulative, proof, index);
++        require(owed >= MIN_PUSH, "below the push minimum");
++        bytes destination = identity;
++        if (method == 0x01) {
++            destination = new LockingBytecodeP2PKH(bytes20(identity));
++        }
++        this.tokens[category].transfer(destination, owed);
++        emit Pushed(leafKey, owed, cumulative);
++    }
++}
+\ No newline at end of file
+diff --git a/examples/merkle_pull_claim/README.md b/examples/merkle_pull_claim/README.md
+new file mode 100644
+index 000000000..b265e62d9
+--- /dev/null
++++ b/examples/merkle_pull_claim/README.md
+@@ -0,0 +1,35 @@
++# Merkle pull claim
++
++Reward payouts without a payout transaction per recipient. An operator publishes one Merkle root per epoch, and each recipient (or anyone relaying for them) claims their own leaf against it. Two contracts carry it.
++
++- [`RootRegistry.scash`](RootRegistry.scash) holds the roots. Two of three operator keys propose a root, the root then sits in a public audit window of `rootDelay` blocks, and anyone may activate it once the window has passed. The window is `require(this.age >= rootDelay)` on the registry's own UTXO, so the chain enforces it and no key can shorten it. A separate guardian key can cancel a pending root but can never propose one. Each proposal also pins the SHA-256 of the source data the root was built from, so anyone can re-fetch it, rebuild the tree and compare.
++- [`FoldClaimPool.scash`](FoldClaimPool.scash) holds the reward tokens and pays leaves of the registry's active root. It reads the registry through an `IRootRegistry` interface, copies the active root with `syncRoot()`, and verifies a Merkle proof in script. A leaf pays `cumulative - already claimed`, so a recipient may skip epochs, and the `claimed` mapping is the receipt that stops a second payout.
++
++A leaf is `sha256(0x00 | method | identity | cumulative as 8 bytes)` and an inner node is `sha256(0x01 | left | right)`.
++
++| Method | Identity | Who submits | Where the tokens go |
++| --- | --- | --- | --- |
++| 0 | a locking bytecode | anyone | exactly that locking bytecode |
++| 1 | the hash160 of a public key | the key holder signs | the destination the signature covers |
++
++Method 1 lets a recipient who only has a legacy P2PKH key claim to a token-aware address: the signature is the link between the two. After a root has been active for `pushDelay` blocks the registry opens a push window, and the pool's operator key may pay leaves that never claimed, to their own identity, above a minimum payout.
++
++[`merkle.ts`](merkle.ts) builds the tree and the proofs off-chain and agrees byte for byte with the contract.
++
++## Activating a root
++
++`activateRoot()` checks `this.age`, which is `OP_CHECKSEQUENCEVERIFY` on the registry's master input, so the call sets that input's sequence:
++
++```ts
++await registry.call.activateRoot().setSequence(rootDelay).send();
++```
++
++A smaller sequence is refused by the VM, and a larger one holds the spend until the registry UTXO is that old.
++
++## Tests
++
++```bash
++yarn workspace testing-suite test merkle_pull_claim
++```
++
++[`../testing-suite/test/merkle_pull_claim.test.ts`](../testing-suite/test/merkle_pull_claim.test.ts) compiles both contracts and runs the whole flow on the mock network: the audit window, a guardian cancel, claims by a stranger, forged claims, cumulative top-ups across epochs, and a method 1 claim.
+diff --git a/examples/merkle_pull_claim/RootRegistry.scash b/examples/merkle_pull_claim/RootRegistry.scash
+new file mode 100644
+index 000000000..8e1be11e0
+--- /dev/null
++++ b/examples/merkle_pull_claim/RootRegistry.scash
+@@ -0,0 +1,80 @@
++pragma solidcash ^0.51.0;
++
++event Proposed(int indexed epoch, bytes32 root, bytes32 snapshot);
++event Activated(int indexed epoch, bytes32 root);
++event Cancelled(int indexed epoch);
++event PushOpened(int indexed epoch);
++
++error NotPending();
++error AuditWindowOpen(int needed);
++error EpochNotIncreasing(int epoch, int floor);
++error AlreadyPending(int epoch);
++
++enum Status { Idle, Pending }
++
++// RootRegistry: where FoldClaimPool learns which Merkle root to pay against.
++//
++// A root is proposed by two of three operator keys, then sits in a public audit window of ROOT_DELAY blocks
++// (a relative timelock on this contract's own UTXO, checked by the chain, so no key can shorten it). During the
++// window a separate guardian key can cancel the proposal but can never propose one. Activation is
++// permissionless once the window has passed. The window and the push delay are constructor arguments, fixed in the
++// contract address: the production profile is 144 and 4032 blocks, a demo profile can use fewer. Every proposal pins the SHA-256 of the exact F@H API response the
++// root was built from, so anyone can re-fetch it, rebuild the tree and compare.
++contract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian, int rootDelay, int pushDelay) {
++
++    // The first three are read by FoldClaimPool through IRootRegistry: keep their order.
++    bytes32 public activeRoot;
++    int public activeEpoch;
++    int public pushEpoch;               // epoch whose root has been active long enough for operator push
++    bytes32 public activeSnapshot;
++    Status public status;
++    bytes32 public pendingRoot;
++    int public pendingEpoch;
++    bytes32 public pendingSnapshot;
++    int public highEpoch;               // highest epoch ever proposed, cancelled ones included
++
++    modifier twoOfThree(sig a, sig b) {
++        require(checkMultiSig([a, b], [op1, op2, op3]));
++        _;
++    }
++
++    modifier onlyGuardian(sig g) {
++        require(checkSig(g, guardian));
++        _;
++    }
++
++    function proposeRoot(sig a, sig b, bytes32 root, bytes32 snapshot, int epoch) twoOfThree(a, b) {
++        require(this.status == Status.Idle, AlreadyPending(this.pendingEpoch));
++        require(epoch > this.highEpoch, EpochNotIncreasing(epoch, this.highEpoch));
++        this.pendingRoot = root;
++        this.pendingSnapshot = snapshot;
++        this.pendingEpoch = epoch;
++        this.highEpoch = epoch;
++        this.status = Status.Pending;
++        emit Proposed(epoch, root, snapshot);
++    }
++
++    function cancelPending(sig g) onlyGuardian(g) {
++        require(this.status == Status.Pending, NotPending());
++        this.status = Status.Idle;
++        emit Cancelled(this.pendingEpoch);
++    }
++
++    function activateRoot() {
++        require(this.status == Status.Pending, NotPending());
++        require(this.age >= rootDelay, AuditWindowOpen(rootDelay));
++        this.activeRoot = this.pendingRoot;
++        this.activeSnapshot = this.pendingSnapshot;
++        this.activeEpoch = this.pendingEpoch;
++        this.status = Status.Idle;
++        emit Activated(this.pendingEpoch, this.pendingRoot);
++    }
++
++    function openPush() {
++        require(this.status == Status.Idle, "a proposal is pending");
++        require(this.activeEpoch > this.pushEpoch, "push already open for this epoch");
++        require(this.age >= pushDelay, AuditWindowOpen(pushDelay));
++        this.pushEpoch = this.activeEpoch;
++        emit PushOpened(this.activeEpoch);
++    }
++}
+\ No newline at end of file
+diff --git a/examples/merkle_pull_claim/merkle.ts b/examples/merkle_pull_claim/merkle.ts
+new file mode 100644
+index 000000000..31044e5eb
+--- /dev/null
++++ b/examples/merkle_pull_claim/merkle.ts
+@@ -0,0 +1,51 @@
++// Merkle tree over payout leaves. It must agree byte for byte with FoldClaimPool.scash.
++//   leaf = sha256(0x00 | method | identity | cumulative as 8 bytes, little endian)
++//   node = sha256(0x01 | left | right); missing leaves are 32 zero bytes; depth = ceil(log2(leaf count))
++// method 0: identity is a locking bytecode. method 1: identity is the 20 byte hash160 of a public key.
++import { bigIntToBinUint64LE, binToHex, flattenBinArray, sha256 } from '@bitauth/libauth';
++
++export type Entry = { method: 0 | 1; identity: Uint8Array; cumulative: bigint };
++
++const ZERO = new Uint8Array(32);
++const node = (left: Uint8Array, right: Uint8Array): Uint8Array =>
++  sha256.hash(flattenBinArray([Uint8Array.of(0x01), left, right]));
++
++export const leafHash = (e: Entry): Uint8Array =>
++  sha256.hash(flattenBinArray([Uint8Array.of(0x00, e.method), e.identity, bigIntToBinUint64LE(e.cumulative)]));
++
++/** The pool's receipt key for a leaf. It does not depend on the cumulative amount. */
++export const leafKey = (e: Pick<Entry, 'method' | 'identity'>): Uint8Array =>
++  sha256.hash(flattenBinArray([Uint8Array.of(e.method), e.identity]));
++
++export class MerkleTree {
++  readonly levels: Uint8Array[][];
++
++  constructor(readonly entries: Entry[]) {
++    if (entries.length === 0) throw new Error('empty tree');
++    if (new Set(entries.map((e) => binToHex(leafKey(e)))).size !== entries.length) throw new Error('duplicate leaf identity');
++    const size = 2 ** Math.ceil(Math.log2(entries.length));
++    let level = entries.map(leafHash);
++    while (level.length < size) level.push(ZERO);
++    this.levels = [level];
++    while (level.length > 1) {
++      const next: Uint8Array[] = [];
++      for (let i = 0; i < level.length; i += 2) next.push(node(level[i], level[i + 1]));
++      this.levels.push(next);
++      level = next;
++    }
++  }
++
++  get root(): Uint8Array { return this.levels[this.levels.length - 1][0]; }
++
++  /** The sibling hashes from the leaf up, concatenated: the `proof` argument of the pool's claim functions. */
++  proof(index: number): Uint8Array {
++    if (!Number.isInteger(index) || index < 0 || index >= this.entries.length) throw new RangeError('no such leaf');
++    const siblings: Uint8Array[] = [];
++    let position = index;
++    for (let l = 0; l < this.levels.length - 1; l++) {
++      siblings.push(this.levels[l][position ^ 1]);
++      position >>= 1;
++    }
++    return flattenBinArray(siblings);
++  }
++}
+diff --git a/examples/testing-suite/test/merkle_pull_claim.test.ts b/examples/testing-suite/test/merkle_pull_claim.test.ts
+new file mode 100644
+index 000000000..7e8f44184
+--- /dev/null
++++ b/examples/testing-suite/test/merkle_pull_claim.test.ts
+@@ -0,0 +1,197 @@
++/* eslint-disable @typescript-eslint/explicit-function-return-type, @typescript-eslint/no-explicit-any, max-len */
++import { hash160, hexToBin } from '@bitauth/libauth';
++import { SignatureTemplate, SighashType, SignatureAlgorithm } from '@solidcash/solidcash';
++import { StatefulContract, getDataNftLockingBytecode } from '@solidcash/solidcash/stateful';
++import { compileFile } from '@solidcash/solidc';
++import { ethers } from '@solidcash/testing';
++import { mine } from '@nomicfoundation/hardhat-network-helpers';
++import { MerkleTree, leafKey, type Entry } from '../../merkle_pull_claim/merkle.js';
++
++// A registry publishes a Merkle root only after a public audit window; a pool pays any leaf of the active root once.
++// The window is `require(this.age >= rootDelay)` in the registry, so activating needs the registry's master input to carry an
++// nSequence of rootDelay (144 here): the call sets it with `setSequence`, and the chain refuses anything shorter.
++const registryArtifact = compileFile(new URL('../../merkle_pull_claim/RootRegistry.scash', import.meta.url));
++const poolArtifact = compileFile(new URL('../../merkle_pull_claim/FoldClaimPool.scash', import.meta.url));
++
++const ROOT_DELAY = 144;                    // the audit window, a constructor argument of the registry
++const PUSH_DELAY = 4032;
++const ASSET = 'f01dca5ef01dca5ef01dca5ef01dca5ef01dca5ef01dca5ef01dca5ef01dca5e';
++const OTHER = 'abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd';
++const POOL_TOKENS = 1_000_000_000n;
++const SNAPSHOT = new Uint8Array(32).fill(0x11);
++
++const ecdsa = (s: { privateKey: Uint8Array }) => new SignatureTemplate(s.privateKey, SighashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
++const outcome = (p: Promise<unknown>) => p.then(() => 'accepted', (e: any) => String(e?.message ?? e));
++const p2pkhLock = (pkh: Uint8Array) => Uint8Array.of(0x76, 0xa9, 0x14, ...pkh, 0x88, 0xac);
++/** A folder nobody holds a key for: a leaf that only the claim path can pay. */
++const filler = (seed: number) => p2pkhLock(Uint8Array.of(seed, 0xf0, 0x1d, ...new Array(17).fill(0xfc)));
++
++async function setup() {
++  const [op1, op2, op3, guardian, alice, bob, mallory, dest] = await ethers.getSigners(8);
++  const provider: any = op1.provider;
++  const registry: any = await (await ethers.getContractFactory(registryArtifact, op1))
++    .deploy(op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey, BigInt(ROOT_DELAY), BigInt(PUSH_DELAY));
++  await registry.waitForDeployment();
++
++  const tokenCoin = { txid: 'c'.repeat(64), vout: 0, satoshis: 1_200n, token: { category: ASSET, amount: POOL_TOKENS } };
++  await provider.addUtxo(op1.getAddress(), tokenCoin);
++  const registryData = getDataNftLockingBytecode(registry.categoryId, hexToBin(registry.inner.lockingBytecode));
++  const genesis = (await op1.getUtxos()).find((u: any) => u.vout === 0 && !u.token && u.satoshis >= 200_000n);
++  const { contract: deployed } = await StatefulContract.deploy(poolArtifact, [hexToBin(ASSET), registryData, op1.publicKey], {
++    provider, fundingUtxo: genesis, funder: op1.unlockP2PKH(), changeAddress: op1.getAddress(),
++  } as any) as any;
++  const pool: any = StatefulContract.withCategory(deployed.inner, deployed.categoryId, {
++    externalContracts: {
++      IRootRegistry: {
++        artifact: registry.inner.artifact,
++        categoryId: registry.categoryId,
++        constructorArgs: [op1.publicKey, op2.publicKey, op3.publicKey, guardian.publicKey, BigInt(ROOT_DELAY), BigInt(PUSH_DELAY)],
++      },
++    },
++  } as any);
++  await pool.connect(op1).call.fund(hexToBin(ASSET)).tokenContainerDeposit(ASSET, POOL_TOKENS).addInput(tokenCoin, op1.unlockP2PKH()).send();
++
++  // Two folders paid to a BCH address (method 0), one legacy key (method 1), then fillers that fill out the tree.
++  const privateKey = new Uint8Array(32).fill(0x40);
++  const legacy = { privateKey, publicKey: new SignatureTemplate(privateKey).publicKey };
++  const entries: Entry[] = [
++    { method: 0, identity: alice.getLockingBytecode(), cumulative: 5_000n },
++    { method: 0, identity: bob.getLockingBytecode(), cumulative: 12_345n },
++    { method: 1, identity: hash160(legacy.publicKey), cumulative: 70_000n },
++    ...Array.from({ length: 5 }, (_, i) => ({ method: 0 as const, identity: filler(i), cumulative: BigInt(1000 + i) })),
++  ];
++  return { op1, op2, op3, guardian, alice, bob, mallory, dest, provider, registry, pool, legacy, entries };
++}
++type Ctx = Awaited<ReturnType<typeof setup>>;
++
++const tokensAt = async (c: Ctx, lockingBytecode: Uint8Array) => {
++  const utxos = await c.provider.getUtxosForLockingBytecode(lockingBytecode);
++  return utxos.filter((u: any) => u.token?.category === ASSET).reduce((n: bigint, u: any) => n + u.token.amount, 0n);
++};
++
++const propose = (c: Ctx, tree: MerkleTree, epoch: bigint) =>
++  c.registry.call.proposeRoot(ecdsa(c.op1), ecdsa(c.op2), tree.root, SNAPSHOT, epoch).send();
++const activate = (c: Ctx, blocks = ROOT_DELAY) => c.registry.call.activateRoot().setSequence(blocks).send();
++
++/** Propose, wait out the audit window, activate, and sync the pool. */
++async function publish(c: Ctx, tree: MerkleTree, epoch: bigint) {
++  await propose(c, tree, epoch);
++  await mine(ROOT_DELAY);
++  for (let extra = 0; ; extra++) { // the mock confirms the proposal one block late
++    try { await activate(c); break; } catch (e: any) {
++      if (!/BIP68/.test(String(e?.message)) || extra >= 4) throw e;
++      await mine(1);
++    }
++  }
++  await c.pool.connect(c.op1).call.syncRoot().send();
++}
++
++type Forged = Partial<{ category: string; identity: Uint8Array; leafKey: Uint8Array; cumulative: bigint; proof: Uint8Array; index: bigint }>;
++/** Method 0 claim for entries[index]; any argument may be forged through `o`. */
++const claim = (c: Ctx, by: any, tree: MerkleTree, index: number, o: Forged = {}) => {
++  const e = tree.entries[index];
++  const identity = o.identity ?? e.identity;
++  return c.pool.connect(by).call.claim(
++    hexToBin(o.category ?? ASSET), identity, o.leafKey ?? leafKey({ method: 0, identity }), o.cumulative ?? e.cumulative,
++    o.proof ?? tree.proof(index), o.index ?? BigInt(index),
++  ).send();
++};
++/** Method 1 claim: the key behind the legacy address signs and names the destination. */
++const claimWithKey = (c: Ctx, by: any, tree: MerkleTree, index: number, key: { privateKey: Uint8Array; publicKey: Uint8Array },
++  destination: Uint8Array, o: Forged = {}) => {
++  const e = tree.entries[index];
++  return c.pool.connect(by).call.claimWithKey(
++    new SignatureTemplate(key.privateKey), key.publicKey, hexToBin(o.category ?? ASSET), destination, o.leafKey ?? leafKey(e),
++    o.cumulative ?? e.cumulative, o.proof ?? tree.proof(index), o.index ?? BigInt(index),
++  ).send();
++};
++
++describe('RootRegistry: the audit window is enforced by the chain', () => {
++  it('activates only once the registry UTXO is ROOT_DELAY blocks old, and no shorter sequence passes', async () => {
++    const c = await setup();
++    await propose(c, new MerkleTree(c.entries), 1n);
++
++    expect(await outcome(activate(c))).toMatch(/BIP68/);                                  // right sequence, too young
++    await mine(ROOT_DELAY + 5);
++    expect(await outcome(activate(c, ROOT_DELAY - 1))).toMatch(/OP_CHECKSEQUENCEVERIFY/); // shorter than the contract asks
++    expect((await c.registry.getState()).activeEpoch).toBe(0n);
++
++    expect(await outcome(activate(c))).toBe('accepted');
++    expect((await c.registry.getState()).activeEpoch).toBe(1n);
++  });
++
++  it('lets the guardian cancel a pending root, which the pool then never sees', async () => {
++    const c = await setup();
++    await propose(c, new MerkleTree(c.entries), 1n);
++    await c.registry.call.cancelPending(new SignatureTemplate(c.guardian.privateKey, SighashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA)).send();
++    await mine(ROOT_DELAY + 5);
++    expect(await outcome(activate(c))).not.toBe('accepted');
++    expect(await outcome(c.pool.connect(c.mallory).call.syncRoot().send())).not.toBe('accepted');
++  });
++});
++
++describe('FoldClaimPool: pull claims against the active root', () => {
++  it('pays a method 0 leaf once, to its own address, whoever submits it', async () => {
++    const c = await setup();
++    const tree = new MerkleTree(c.entries);
++    await publish(c, tree, 1n);
++
++    await claim(c, c.mallory, tree, 0);                                      // a stranger relays Alice's claim
++    expect(await tokensAt(c, c.entries[0].identity)).toBe(5_000n);
++    expect(await tokensAt(c, c.mallory.getLockingBytecode())).toBe(0n);
++    expect(String(await c.pool.tokens[ASSET].amount)).toBe(String(POOL_TOKENS - 5_000n));
++
++    expect(await outcome(claim(c, c.alice, tree, 0))).not.toBe('accepted');   // the receipt blocks a second claim
++    expect(await tokensAt(c, c.entries[0].identity)).toBe(5_000n);
++  });
++
++  it('refuses every forged claim and pays nobody', async () => {
++    const c = await setup();
++    const tree = new MerkleTree(c.entries);
++    await publish(c, tree, 1n);
++    const mallory = c.mallory.getLockingBytecode();
++    const forged: [string, () => Promise<unknown>][] = [
++      ["Bob's proof, paid to Mallory", () => claim(c, c.mallory, tree, 1, { identity: mallory })],
++      ['inflated amount', () => claim(c, c.mallory, tree, 1, { cumulative: 1_000_000n })],
++      ['wrong index', () => claim(c, c.mallory, tree, 1, { index: 3n })],
++      ['truncated proof', () => claim(c, c.mallory, tree, 1, { proof: tree.proof(1).slice(0, 64) })],
++      ['proof not a multiple of 32', () => claim(c, c.mallory, tree, 1, { proof: tree.proof(1).slice(0, 70) })],
++      ['another token category', () => claim(c, c.mallory, tree, 1, { category: OTHER })],
++      ["someone else's receipt key", () => claim(c, c.mallory, tree, 1, { leafKey: leafKey(tree.entries[0]) })],
++      ['a method 1 leaf claimed as method 0', () => claim(c, c.mallory, tree, 2)],
++    ];
++    for (const [label, send] of forged) expect(await outcome(send()), label).not.toBe('accepted');
++    expect(await tokensAt(c, mallory)).toBe(0n);
++    expect(await tokensAt(c, c.entries[1].identity)).toBe(0n);
++    expect(String(await c.pool.tokens[ASSET].amount)).toBe(String(POOL_TOKENS));
++  });
++
++  it('pays only the difference under a newer cumulative root, and a folder may skip an epoch', async () => {
++    const c = await setup();
++    const t1 = new MerkleTree(c.entries);
++    await publish(c, t1, 1n);
++    await claim(c, c.mallory, t1, 0);                                        // Alice takes 5,000 in epoch 1
++    const t2 = new MerkleTree(c.entries.map((e, i) => ({ ...e, cumulative: e.cumulative + (i === 0 ? 3_000n : 100n) })));
++    await publish(c, t2, 2n);
++    await claim(c, c.mallory, t2, 0);                                        // epoch 2: only the 3,000 more
++    await claim(c, c.mallory, t2, 1);                                        // Bob skipped epoch 1 and takes it all
++    expect(await tokensAt(c, c.entries[0].identity)).toBe(8_000n);
++    expect(await tokensAt(c, c.entries[1].identity)).toBe(12_445n);
++    expect(await outcome(claim(c, c.mallory, t1, 3))).not.toBe('accepted');  // an epoch 1 proof no longer matches
++  });
++
++  it('pays a method 1 leaf to the destination its key signs for, and refuses another key', async () => {
++    const c = await setup();
++    const tree = new MerkleTree(c.entries);
++    await publish(c, tree, 1n);
++    const stranger = { privateKey: c.mallory.privateKey, publicKey: new SignatureTemplate(c.mallory.privateKey).publicKey };
++    const dest = c.dest.getLockingBytecode();
++
++    expect(await outcome(claimWithKey(c, c.mallory, tree, 2, stranger, c.mallory.getLockingBytecode()))).not.toBe('accepted');
++    expect(await tokensAt(c, c.mallory.getLockingBytecode())).toBe(0n);
++
++    await claimWithKey(c, c.mallory, tree, 2, c.legacy, dest);               // Mallory pays the fee, the legacy key signs
++    expect(await tokensAt(c, dest)).toBe(70_000n);
++    expect(await outcome(claimWithKey(c, c.mallory, tree, 2, c.legacy, dest))).not.toBe('accepted');
++  });
++});
+diff --git a/website/docs/showcase.md b/website/docs/showcase.md
+index 3154a4e2c..76d25c1bf 100644
+--- a/website/docs/showcase.md
++++ b/website/docs/showcase.md
+@@ -116,3 +116,7 @@ BCH Pump is a CashTokens Launchpad inspired by the 'pump.fun' mechanism to boots
+ </div>
+ 
+ Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on rolling timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions.
++
++## Merkle pull claims
++
++A registry publishes a payout Merkle root after a public audit window that the chain itself enforces, and a pool pays any leaf of the active root once, to the identity the leaf names. Recipients, or anyone relaying for them, pull their own reward in one transaction, so the operator never sends a transaction per recipient. A leaf can be keyed to a locking bytecode or to the hash160 of a legacy public key whose holder signs the claim and picks the destination. The two contracts and their test suite are in [`examples/merkle_pull_claim`](https://github.com/solidcash/solidcash/tree/master/examples/merkle_pull_claim).
+-- 
+2.52.0
+

@@ -1,0 +1,6 @@
+{"at":"2026-11-21T12:51:52.443Z","net":"chipnet","what":"deploy-registry","txid":"a631ab63bfb3ec1f21680bdc73669f642431dc6404f0adb8f8c36ba27064496a","category":"4ee20e6faa85ece4f04aff73fc14dd83de25ab94871b17e5e5870eded79ebef2"}
+{"at":"2026-11-21T12:52:06.394Z","net":"chipnet","what":"deploy-pool","txid":"d1d06abe8d4c0683bb4396e16079483310fe49127a25b90a3359f418e4f1858b","category":"0e74058afb02481ce89e99135ec75ed83aa51a9690afb16642561a5dd2e0d19d"}
+{"at":"2026-11-21T12:52:27.016Z","net":"chipnet","what":"fund-pool","txid":"b6070f91606dd371ed5181e553f6c788590f3f96b35f7e8f91d10e7a45484d6a","units":"110000000000000"}
+{"at":"2026-11-21T12:52:46.774Z","net":"chipnet","what":"propose-root","txid":"0227db64e3aa3c4d5f161271efcf422d7744cc99c44a25d6d82df513e614d47a","epoch":1,"root":"a890b9cc68b773c429b13654bcc39771d017eac75a1ac22d17b6f9420eb697f8","snapshot":"d13b3ec2f81cd10e1ccf9308966821f9b72cf108cc1271765f514364d47fb4ab"}
+{"at":"2026-11-21T12:54:37.603Z","net":"chipnet","what":"send","txid":"5b1b183bdb209bcabe0b7d4edaac82611e91489c2f45b9cbf4b2c5e94aea1b90","from":"DEPLOYER","outputs":1}
+{"at":"2026-11-21T12:54:55.672Z","net":"chipnet","what":"fund-burners","txid":"fd8b0389af5a3863f9e3294a6a9ebfb1dfc2680beab0f8a256f40b31c71746e9","count":150,"sats":"12000"}

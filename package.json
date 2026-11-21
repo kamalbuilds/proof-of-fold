@@ -5,7 +5,12 @@
   "type": "module",
   "description": "FoldingCash pull-based reward claims in SolidCash",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "web:data": "tsx scripts/publish-web-data.ts",
+    "web:dev": "vite --config web/vite.config.ts",
+    "web:build": "tsx scripts/publish-web-data.ts && vite build --config web/vite.config.ts",
+    "web:preview": "vite preview --config web/vite.config.ts"
+  },
   "overrides": {
     "@bitauth/libauth": "file:vendor/bitauth-libauth-3.1.0-next.8.tgz"
   },

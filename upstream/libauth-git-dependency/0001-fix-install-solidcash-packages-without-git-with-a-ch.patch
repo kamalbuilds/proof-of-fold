@@ -1,0 +1,287 @@
+From 73d0f2240b7d330725adc66c2edb6c5330ab8398 Mon Sep 17 00:00:00 2001
+From: kamalbuilds <geniusamansingh@gmail.com>
+Date: Sat, 21 Nov 2026 18:50:55 +0530
+Subject: [PATCH] fix: install @solidcash packages without git, with a check
+ that fails when they do not
+
+Every published @solidcash package that uses libauth (utils, solidc, solidcash, testing, and solidhat
+through solidcash) declared it as git+https://github.com/mainnet-pat/libauth.git#1cf4b432. npm
+refuses that spec under allow-git=none (EALLOWGIT), and so does any CI image or container without
+git or ssh keys, so `npm install @solidcash/solidcash` failed there.
+
+Point the dependency at the same commit's GitHub archive tarball instead: a remote tarball is not a
+git dependency, and the commit already carries the prebuilt build/ tree, so nothing has to run on
+install. The root resolution, yarn.lock and the example manifests follow.
+
+scripts/check-installable-without-git.mjs packs every release package, installs the tarballs into an
+empty project with --allow-git=none and loads libauth from each. EXTRA_TARBALLS installs companion
+packages alongside, for @mem-cash/*, which declares the same git spec in its own repository.
+---
+ examples/package.json                     |  2 +-
+ examples/testing-suite/package.json       |  2 +-
+ package.json                              |  3 +-
+ packages/solidc/package.json              |  2 +-
+ packages/solidcash/package.json           |  2 +-
+ packages/testing/package.json             |  2 +-
+ packages/utils/package.json               |  2 +-
+ scripts/check-installable-without-git.mjs | 84 +++++++++++++++++++++++
+ yarn.lock                                 | 16 ++---
+ 9 files changed, 100 insertions(+), 15 deletions(-)
+ create mode 100644 scripts/check-installable-without-git.mjs
+
+diff --git a/examples/package.json b/examples/package.json
+index f99dc497a..f4ed3bd9d 100644
+--- a/examples/package.json
++++ b/examples/package.json
+@@ -11,7 +11,7 @@
+     "lint": "eslint . --ext .ts --ignore-path ../.eslintignore"
+   },
+   "dependencies": {
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@solidcash/solidc": "^0.51.0",
+     "@solidcash/solidcash": "^0.51.0"
+   },
+diff --git a/examples/testing-suite/package.json b/examples/testing-suite/package.json
+index 196722a51..39d0a61cd 100644
+--- a/examples/testing-suite/package.json
++++ b/examples/testing-suite/package.json
+@@ -17,7 +17,7 @@
+     "test": "vitest run"
+   },
+   "dependencies": {
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@solidcash/testing": "^0.51.0",
+     "@solidcash/solidc": "^0.51.0",
+     "@solidcash/solidcash": "^0.51.0"
+diff --git a/package.json b/package.json
+index 1dd87f6f4..9bac6c24b 100644
+--- a/package.json
++++ b/package.json
+@@ -14,7 +14,7 @@
+   ],
+   "resolutions": {
+     "ws": "8.21.0",
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@mem-cash/types": "file:../mem-cash/packages/types",
+     "@mem-cash/storage": "file:../mem-cash/packages/storage",
+     "@mem-cash/validation": "file:../mem-cash/packages/validation",
+@@ -50,6 +50,7 @@
+     "test:all": "yarn test && yarn test:e2e",
+     "test:regtest": "yarn workspace @solidcash/solidcash test:regtest",
+     "test:package-smoke": "node scripts/release-package-smoke.mjs",
++    "check:installable-without-git": "node scripts/check-installable-without-git.mjs",
+     "test:docs-snippets": "tsx scripts/release-docs-snippets.ts",
+     "test:corpus-baseline": "node scripts/release-corpus-baseline.mjs",
+     "test:application-conformance": "node scripts/release-application-conformance.mjs",
+diff --git a/packages/solidc/package.json b/packages/solidc/package.json
+index f9fd12b27..719bf780a 100644
+--- a/packages/solidc/package.json
++++ b/packages/solidc/package.json
+@@ -54,7 +54,7 @@
+     "test:watch": "vitest"
+   },
+   "dependencies": {
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@noble/hashes": "^2.0.0",
+     "@solidcash/utils": "^0.51.0",
+     "antlr4": "^4.13.2",
+diff --git a/packages/solidcash/package.json b/packages/solidcash/package.json
+index f632c48c3..a6afc2c7e 100644
+--- a/packages/solidcash/package.json
++++ b/packages/solidcash/package.json
+@@ -121,7 +121,7 @@
+     "test:regtest": "node scripts/run-regtest-matrix.mjs"
+   },
+   "dependencies": {
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@electrum-cash/network": "^4.4.8",
+     "@electrum-cash/web-socket": "^4.1.0",
+     "@mem-cash/electrum": "^0.0.11",
+diff --git a/packages/testing/package.json b/packages/testing/package.json
+index 09ca095c5..19622b479 100644
+--- a/packages/testing/package.json
++++ b/packages/testing/package.json
+@@ -92,7 +92,7 @@
+     "test": "vitest run --passWithNoTests"
+   },
+   "dependencies": {
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@solidcash/utils": "^0.51.0",
+     "ethers": "^6.17.0",
+     "@solidcash/solidc": "^0.51.0",
+diff --git a/packages/utils/package.json b/packages/utils/package.json
+index 5bc2434cd..df7745601 100644
+--- a/packages/utils/package.json
++++ b/packages/utils/package.json
+@@ -43,7 +43,7 @@
+     "test:fast": "vitest run"
+   },
+   "dependencies": {
+-    "@bitauth/libauth": "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8",
++    "@bitauth/libauth": "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz",
+     "@noble/hashes": "^2.0.0"
+   },
+   "devDependencies": {
+diff --git a/scripts/check-installable-without-git.mjs b/scripts/check-installable-without-git.mjs
+new file mode 100644
+index 000000000..3ebaa538d
+--- /dev/null
++++ b/scripts/check-installable-without-git.mjs
+@@ -0,0 +1,84 @@
++#!/usr/bin/env node
++/* eslint-disable @typescript-eslint/explicit-function-return-type */
++// Fails when the published @solidcash packages cannot be installed without git.
++//
++// Packs every release package and installs the tarballs together into an empty project with git dependencies
++// disabled (npm's allow-git=none, which is also what a CI image or a container without git or ssh keys amounts to).
++// A package that still declares a git dependency that is not bundled makes npm stop with EALLOWGIT, and so does a
++// transitive one. The user and project npm configs are replaced by an empty one so the result does not depend on
++// the machine running the check.
++//
++// EXTRA_TARBALLS (comma separated paths) installs more tarballs alongside, for example the companion @mem-cash packages
++// repacked with the same dependency change before that repository has released it.
++//
++// Run it after `yarn build`: `yarn check:installable-without-git`.
++import { execFileSync } from 'node:child_process';
++import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { join, resolve } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
++const packageDirs = ['utils', 'solidc', 'solidcash', 'testing', 'solidhat', 'create-solidhat'].map((name) => join(root, 'packages', name));
++const work = mkdtempSync(join(tmpdir(), 'solidcash-no-git-'));
++const tarballs = join(work, 'tarballs');
++const consumer = join(work, 'consumer');
++const userNpmrc = join(work, 'user.npmrc');
++const globalNpmrc = join(work, 'global.npmrc');
++const env = { ...process.env, npm_config_userconfig: userNpmrc, npm_config_globalconfig: globalNpmrc, npm_config_ignore_scripts: 'true' };
++
++const npm = (args, cwd) => execFileSync('npm', args, { cwd, env, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, stdio: 'pipe' });
++
++let failed = false;
++try {
++  mkdirSync(tarballs);
++  mkdirSync(consumer);
++  writeFileSync(userNpmrc, '');
++  writeFileSync(globalNpmrc, '');
++  writeFileSync(join(consumer, 'package.json'), '{ "name": "no-git-consumer", "private": true, "type": "module" }\n');
++
++  const gitSpec = /^(git[+:]|github:|gitlab:|bitbucket:|[\w.-]+\/[\w.-]+(#.*)?$)|\.git(#.*)?$/;
++  const declared = [];
++  const packed = packageDirs.map((dir) => {
++    const { name, version, ...manifest } = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
++    for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
++      for (const [dependency, spec] of Object.entries(manifest[field] ?? {})) {
++        if (gitSpec.test(spec)) declared.push(`  ${name} declares ${dependency}@${spec}`);
++      }
++    }
++    const filename = `${name.replace(/^@/, '').replace('/', '-')}-${version}.tgz`;
++    npm(['pack', '--ignore-scripts', '--pack-destination', tarballs], dir);
++    return join(tarballs, filename);
++  });
++
++  try {
++    const extra = (process.env.EXTRA_TARBALLS ?? '').split(',').filter(Boolean).map((path) => resolve(path));
++    npm(['install', '--allow-git=none', '--ignore-scripts', '--no-audit', '--no-fund', ...packed, ...extra], consumer);
++  } catch (error) {
++    const output = `${error.stdout ?? ''}${error.stderr ?? ''}`.trim().split('\n').filter((line) => /^npm (error|warn)/.test(line));
++    const cause = declared.length > 0
++      ? `Git dependencies declared in this repository:\n${declared.join('\n')}`
++      : 'The packages in this repository declare no git dependency, so the one above comes from a dependency outside it. '
++        + 'Repack that dependency without it and pass it in EXTRA_TARBALLS to check the rest.';
++    throw new Error(`npm install --allow-git=none of the packed @solidcash packages failed:\n${output.join('\n') || error.message}\n${cause}`);
++  }
++
++  // A package whose bundled or tarball dependency is missing still installs without error, so load libauth from each.
++  writeFileSync(join(consumer, 'resolve.mjs'), `
++import { createRequire } from 'node:module';
++import { pathToFileURL } from 'node:url';
++for (const name of ['utils', 'solidc', 'solidcash', 'testing']) {
++  const require = createRequire(new URL(\`./node_modules/@solidcash/\${name}/package.json\`, import.meta.url));
++  const libauth = await import(pathToFileURL(require.resolve('@bitauth/libauth')));
++  if (libauth.binToHex(libauth.hexToBin('00ff')) !== '00ff') throw new Error(\`@solidcash/\${name}: @bitauth/libauth did not load\`);
++}
++`);
++  execFileSync('node', ['resolve.mjs'], { cwd: consumer, env, stdio: 'pipe' });
++  console.log('ok: the packed @solidcash packages install with --allow-git=none');
++} catch (error) {
++  failed = true;
++  console.error(String(error.message ?? error));
++} finally {
++  rmSync(work, { recursive: true, force: true });
++}
++process.exit(failed ? 1 : 0);
+diff --git a/yarn.lock b/yarn.lock
+index 91f13418f..29379f85c 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -58,9 +58,9 @@
+   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-1.0.2.tgz#bbe12dca5b4ef983a0d0af4b07b9bc90ea0ababa"
+   integrity sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==
+ 
+-"@bitauth/libauth@git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8":
++"@bitauth/libauth@https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz":
+   version "3.1.0-next.8"
+-  resolved "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++  resolved "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz#90ea7ff448e61a07987362b6a379cad046acde65"
+ 
+ "@chris.troutner/bip32-utils@1.0.5":
+   version "1.0.5"
+@@ -1698,14 +1698,14 @@
+ "@mem-cash/core@0.0.11", "@mem-cash/core@file:../mem-cash/packages/core":
+   version "0.0.11"
+   dependencies:
+-    "@bitauth/libauth" "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++    "@bitauth/libauth" "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz"
+     "@mem-cash/storage" "0.0.11"
+     "@mem-cash/types" "0.0.11"
+ 
+ "@mem-cash/electrum@0.0.11", "@mem-cash/electrum@^0.0.11", "@mem-cash/electrum@file:../mem-cash/packages/electrum":
+   version "0.0.11"
+   dependencies:
+-    "@bitauth/libauth" "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++    "@bitauth/libauth" "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz"
+     "@mem-cash/core" "0.0.11"
+     "@mem-cash/storage" "0.0.11"
+     "@mem-cash/types" "0.0.11"
+@@ -1718,7 +1718,7 @@
+ "@mem-cash/server@0.0.11", "@mem-cash/server@file:../mem-cash/packages/server":
+   version "0.0.11"
+   dependencies:
+-    "@bitauth/libauth" "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++    "@bitauth/libauth" "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz"
+     "@mem-cash/core" "0.0.11"
+     "@mem-cash/electrum" "0.0.11"
+     "@mem-cash/storage" "0.0.11"
+@@ -1729,18 +1729,18 @@
+ "@mem-cash/storage@0.0.11", "@mem-cash/storage@file:../mem-cash/packages/storage":
+   version "0.0.11"
+   dependencies:
+-    "@bitauth/libauth" "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++    "@bitauth/libauth" "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz"
+     "@mem-cash/types" "0.0.11"
+ 
+ "@mem-cash/types@0.0.11", "@mem-cash/types@file:../mem-cash/packages/types":
+   version "0.0.11"
+   dependencies:
+-    "@bitauth/libauth" "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++    "@bitauth/libauth" "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz"
+ 
+ "@mem-cash/validation@0.0.11", "@mem-cash/validation@^0.0.11", "@mem-cash/validation@file:../mem-cash/packages/validation":
+   version "0.0.11"
+   dependencies:
+-    "@bitauth/libauth" "git+https://github.com/mainnet-pat/libauth.git#1cf4b432864b3a4ed9f33d1992355d7286f3dab8"
++    "@bitauth/libauth" "https://github.com/mainnet-pat/libauth/archive/1cf4b432864b3a4ed9f33d1992355d7286f3dab8.tar.gz"
+ 
+ "@monsterbitar/isomorphic-ws@^5.3.0", "@monsterbitar/isomorphic-ws@^5.3.1":
+   version "5.3.1"
+-- 
+2.52.0
+

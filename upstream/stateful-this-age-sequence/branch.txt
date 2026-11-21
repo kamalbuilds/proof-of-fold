@@ -1,0 +1,4 @@
+branch: stateful-this-age-sequence
+base: eda85a88d752525ab1fe92f03e9dba04a45b518a (master, 0.51.0)
+commit: dad668cd7 (sits on 6a21551d8 in the working branch: upstream PR #4 applied as one commit, prereq/upstream-pr4.diff)
+stacked on: upstream PR #4 (head 5b52811fbd4ae6250fce5791348f359a6208831f at time of reading). The patch applies to the base alone; its test needs #4.

@@ -1,0 +1,4 @@
+# Add to .github/workflows/github-actions.yml after "Build packages and testing suite",
+# once @mem-cash/* has released without its git dependency.
+      - name: Packed packages install without git
+        run: yarn check:installable-without-git

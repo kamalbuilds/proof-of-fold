@@ -1,0 +1,50 @@
+[
+  {
+    "depth": 1,
+    "leaves": 2,
+    "claimTxBytes": 7605,
+    "txid": "65cdaa278c08684dea244c97012db0e5c8fbed04ccdc0cdd3e13a360ff67c54f"
+  },
+  {
+    "depth": 4,
+    "leaves": 16,
+    "claimTxBytes": 7702,
+    "txid": "2eb71e19d3dc429e419eb328c624d34f35f3dc738a0f6dac0132ea58f135ecd7"
+  },
+  {
+    "depth": 8,
+    "leaves": 256,
+    "claimTxBytes": 7831,
+    "txid": "a20282b01f6a304d60c00f7280cb31ae977688591952c8cdaf8f2932b8a1e09a"
+  },
+  {
+    "depth": 9,
+    "leaves": 512,
+    "claimTxBytes": 7863,
+    "txid": "24d7a40e3d8afe9d82c41c5210ab4861ed34e66a7a9f3a14b9475001afc1dc20"
+  },
+  {
+    "depth": 12,
+    "leaves": 4096,
+    "claimTxBytes": 7959,
+    "txid": "de955ad5825ed51c05fe1a876899830cfc80eb86f0439f222e8a85f26281a899"
+  },
+  {
+    "depth": 16,
+    "leaves": 65536,
+    "claimTxBytes": 8087,
+    "txid": "becac733e997593e9ad558b8ba403934c8777461ea40215b4839c301f849a69f"
+  },
+  {
+    "depth": 20,
+    "leaves": 1048576,
+    "claimTxBytes": 8215,
+    "txid": "bdb5fca405004028ea2e828ef0a1835f5b92febb22d2c56766a3ed5fa397cd95"
+  },
+  {
+    "depth": 24,
+    "leaves": 16777216,
+    "claimTxBytes": 8343,
+    "txid": "77b7cf4b814e9d85f4951f4e56f06f7e342f4e9151a7233f818b0d1e8f5123be"
+  }
+]

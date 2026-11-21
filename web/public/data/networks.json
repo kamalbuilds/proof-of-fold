@@ -1,0 +1,10 @@
+{
+  "networks": [
+    {
+      "id": "chipnet",
+      "epochs": [
+        1
+      ]
+    }
+  ]
+}

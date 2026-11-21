@@ -1,0 +1,522 @@
+diff --git a/packages/solidcash/src/stateful/StatefulContract.ts b/packages/solidcash/src/stateful/StatefulContract.ts
+index 05c5273ab..2737b734c 100644
+--- a/packages/solidcash/src/stateful/StatefulContract.ts
++++ b/packages/solidcash/src/stateful/StatefulContract.ts
+@@ -172,6 +172,7 @@ import {
+   type ValueChunkWriteDescriptor,
+   ValueChunkWriteStagingSession,
+   valueChunkWriteResourceIdentity,
++  assertMasterSequence,
+ } from './StatefulTransactionBuilder.js';
+ import type { StandInCaller } from './stb-materialize-caller-edge-outputs.js';
+ import { legacyIsPublishJobEventName } from './legacy-planning-heuristics.js';
+@@ -5503,7 +5504,7 @@ export class StatefulContract<TArtifact extends Artifact = Artifact> {
+       if (guard++ > n) throw new Error('keccak256 stateful preimage extraction did not converge.');
+       const probe = new CovenantTransactionBuilder({ provider: this.inner.provider });
+       if ((probeCtx.locktime ?? 0) > 0) probe.setLocktime(probeCtx.locktime!);
+-      probe.addInput(masterUtxo, trailing.unlocker);
++      probe.addInput(masterUtxo, trailing.unlocker, (masterUtxo as Partial<UnlockableUtxo>).options);
+       dataNftUtxos.forEach((u, i) => probe.addInput(u, dataNftUnlockers[i]));
+       frontRegion.forEach((u) => probe.addInputs([u])); // unlockable form: u already carries its unlocker
+       const recreates: Output[] = [];
+@@ -7006,6 +7007,8 @@ export class StatefulContract<TArtifact extends Artifact = Artifact> {
+     args: any[],
+     overrides?: {
+       masterUtxo?: Utxo; dataNftUtxos?: Utxo[]; externalCalls?: ExternalCallInfo[];
++      /** The master input's nSequence (`setSequence`, for `this.age`), carried into every probe that spends it. */
++      masterSequence?: number;
+       calls?: CallInfo[];
+       entryKeyOverrides?: Map<number, bigint | boolean | Uint8Array>;
+       externalEntryKeyOverrides?: Map<number, bigint | boolean | Uint8Array>;
+@@ -14971,6 +14974,7 @@ export class StatefulFunctionCall {
+       || this.externalCallInfos.length > 0 || (this.callInfos.length > 0 && !proxyDelegate)
+       || this.registryExternalStateOverrides.size > 0 || this.emitReturnFlag
+       || this.containerDepositAmount !== 0n || this.locktimeOverride !== undefined
++      || this.sequenceOverride !== undefined
+       || this.splitFundingConfig !== undefined || this.mergeConfig !== undefined
+       || (proxyDelegate !== undefined && (this.callerLockingBytecode !== undefined
+         || this.messageBusUpgradeTarget !== undefined));
+@@ -15033,6 +15037,20 @@ export class StatefulFunctionCall {
+     return this;
+   }
+ 
++  // nSequence of the contract's master input, for `require(this.age >= n)`: OP_CHECKSEQUENCEVERIFY reads the
++  // master input's own sequence, which otherwise keeps the default (relative lock disabled).
++  private sequenceOverride?: number;
++
++  /**
++   * Set the master input's nSequence to a BIP68 value, for `this.age` checks: a block count, or `(1 << 22) | units` for
++   * 512-second units. Only an ordinary call takes it; split/merge and composed calls refuse it.
++   */
++  setSequence(sequence: number): this {
++    assertMasterSequence(sequence);
++    this.sequenceOverride = sequence;
++    return this;
++  }
++
+   deleteEntry(slotIndex: number): this {
+     this.entryDeleteSlots.push(slotIndex);
+     return this;
+@@ -15456,6 +15474,7 @@ export class StatefulFunctionCall {
+     const builder = await buildStatefulFunctionCallImpl({
+       compilerRoute: this.compilerRoute,
+       functionName: this.functionName,
++      sequenceOverride: this.sequenceOverride,
+       parentContract: this.parentContract,
+       trySplitMergeBuild: () => this._trySplitMergeBuild(),
+       busRowComposition: () => buildBusRowComposition({
+@@ -15518,6 +15537,7 @@ export class StatefulFunctionCall {
+     return sendWithoutLogicalNonceImpl({
+       functionName: this.functionName,
+       locktimeOverride: this.locktimeOverride,
++      sequenceOverride: this.sequenceOverride,
+       parentContract: this.parentContract,
+       trySplitMergeBuild: () => (this as any)._trySplitMergeBuild(),
+       sendRawBuilder: (b) => this._sendRawBuilder(b),
+diff --git a/packages/solidcash/src/stateful/StatefulTransactionBuilder.ts b/packages/solidcash/src/stateful/StatefulTransactionBuilder.ts
+index e8fd50530..bd8589efa 100644
+--- a/packages/solidcash/src/stateful/StatefulTransactionBuilder.ts
++++ b/packages/solidcash/src/stateful/StatefulTransactionBuilder.ts
+@@ -805,6 +805,19 @@ import {
+  * - Input 1..N: data NFT UTXOs carrying state commitments
+  * - Corresponding outputs preserve locking bytecode, token category, and NFT capability
+  */
++/**
++ * A master input sequence for `this.age`: a raw nSequence (BIP68 when the disable flag, bit 31, is clear). A value with
++ * the disable flag set would disable the relative lock the call asks for, so it is refused.
++ */
++export function assertMasterSequence(sequence: number): void {
++  if (!Number.isInteger(sequence) || sequence < 0 || sequence > 0xffffffff) {
++    throw new Error(`setSequence: ${sequence} is not a 32-bit unsigned integer`);
++  }
++  if (sequence >= 0x80000000) {
++    throw new Error(`setSequence: ${sequence} sets the BIP68 disable flag (bit 31), which turns the relative lock off`);
++  }
++}
++
+ export class StatefulTransactionBuilder {
+   private builderOptions: TransactionBuilderOptions;
+   private _checkMinRelayFee: boolean;
+@@ -6875,6 +6888,30 @@ export class StatefulTransactionBuilder {
+     return this;
+   }
+ 
++  /** Optional nSequence for the master input, e.g. the BIP68 lock `require(this.age >= n)` checks. */
++  sequenceOverride?: number;
++
++  setSequence(sequence: number): this {
++    assertMasterSequence(sequence);
++    this.sequenceOverride = sequence;
++    return this;
++  }
++
++  /**
++   * Put the requested sequence on the master entry itself, in `masterUtxo` and in `allInputs`, so every rebuild and
++   * unlocker refresh that re-lists the inputs from them carries it.
++   */
++  private _pinMasterSequence(): void {
++    const sequence = this.sequenceOverride;
++    if (sequence === undefined) return;
++    const pin = (input: UnlockableUtxo): UnlockableUtxo => (input.options?.sequence === sequence
++      ? input : { ...input, options: { ...input.options, sequence } });
++    this.masterUtxo = pin(this.masterUtxo);
++    const index = this.allInputs.findIndex((input) => sameOutpoint(input, this.masterUtxo));
++    if (index < 0) throw new Error('setSequence: the master input is not among this call\'s inputs');
++    this.allInputs[index] = pin(this.allInputs[index]);
++  }
++
+   /** Co-spend more pool coins a function-pointer target finds itself; a coin already listed is kept once. */
+   addUnslottedPoolCoSpends(coins: readonly UnlockableUtxo[]): void {
+     for (const coin of coins) {
+@@ -6900,6 +6937,7 @@ export class StatefulTransactionBuilder {
+   }
+ 
+   build(): TransactionBuilder {
++    this._pinMasterSequence();
+     if (this.emitReassertAllowed === undefined) {
+       this.emitReassertAllowed = this._isPersistedChunkableValueWriteReady()
+         && !this._isInitialChunkableValueWrite();
+diff --git a/packages/solidcash/src/stateful/sc-apply-overrides.ts b/packages/solidcash/src/stateful/sc-apply-overrides.ts
+index 5e45653c0..317195dfb 100644
+--- a/packages/solidcash/src/stateful/sc-apply-overrides.ts
++++ b/packages/solidcash/src/stateful/sc-apply-overrides.ts
+@@ -75,6 +75,7 @@ export interface ApplyOverridesHost {
+   maxFeeOverride?: bigint;
+   containerDepositAmount: bigint;
+   locktimeOverride?: number;
++  sequenceOverride?: number;
+   externalCallInfos: ExternalCallInfo[];
+   callInfos: CallInfo[];
+   registryExternalStateOverrides: Map<string, Record<string, StateValueType>>;
+@@ -109,6 +110,7 @@ export function reApplyOverrides(
+   for (const slotIndex of host.entryDeleteSlots) builder.deleteEntry(slotIndex);
+   if (host.containerDepositAmount > 0n) builder.setContainerDepositAmount(host.containerDepositAmount);
+   if (host.locktimeOverride !== undefined) builder.setLocktime(host.locktimeOverride);
++  if (host.sequenceOverride !== undefined) builder.setSequence(host.sequenceOverride);
+   for (const { utxo, unlocker } of host.extraInputs) builder.addInput(utxo, unlocker);
+   addContainerDepositOutput(host, builder);
+   for (const output of host.extraOutputs) builder.addOutput(output);
+@@ -195,7 +197,9 @@ export async function applyOverrides(
+     // A declared caller identity is itself a reason to rebuild: the initial build (the namespace factory) never
+     // receives it, so without this the annotation silently does nothing for a plain call - measured: the
+     // `transferFrom` probe kept pinning the signer-keyed slot even after `withCallerIdentity` was called.
+-    || host.callerLockingBytecode !== undefined)
++    || host.callerLockingBytecode !== undefined
++    // The master's sequence must reach the derivation probes the initial build runs, so build again with it.
++    || host.sequenceOverride !== undefined)
+     && host.parentContract && host.functionName && host.functionArgs;
+   if (needsRebuild) await host.parentContract!._ensureResolved();
+   const signerUtxos = needsRebuild && host.functionName === '__forward'
+@@ -214,6 +218,7 @@ export async function applyOverrides(
+         entryKeyOverrides: host.entryKeyOverrides.size > 0 ? host.entryKeyOverrides : undefined,
+         externalEntryKeyOverrides: host.externalEntryKeyOverrides.size > 0 ? host.externalEntryKeyOverrides : undefined,
+         emitReturn: host.emitReturnFlag || undefined,
++        ...(host.sequenceOverride !== undefined && { masterSequence: host.sequenceOverride }),
+         ...(host.callerLockingBytecode !== undefined
+           && { callerLockingBytecode: host.callerLockingBytecode }),
+         ...(host.callerCategoryId !== undefined
+@@ -270,6 +275,7 @@ export async function applyOverrides(
+   }
+ 
+   if (host.locktimeOverride !== undefined) builder.setLocktime(host.locktimeOverride);
++  if (host.sequenceOverride !== undefined) builder.setSequence(host.sequenceOverride);
+   for (const { utxo, unlocker } of host.extraInputs) builder.addInput(utxo, unlocker);
+   addContainerDepositOutput(host, builder);
+   for (const output of host.extraOutputs) builder.addOutput(output);
+@@ -449,7 +455,8 @@ export async function applyOverrides(
+       || host.tokenContainerDeposits.length > 0
+       || host.extraInputs.length > 0
+       || host.extraOutputs.length > 0
+-      || host.locktimeOverride !== undefined;
++      || host.locktimeOverride !== undefined
++      || host.sequenceOverride !== undefined;
+     if (reDerive && hasNewContext) {
+       const reResult = await reDerive(builder);
+       derived = reResult.state;
+diff --git a/packages/solidcash/src/stateful/sc-build-stateful-function-call.ts b/packages/solidcash/src/stateful/sc-build-stateful-function-call.ts
+index 17216f601..c20292553 100644
+--- a/packages/solidcash/src/stateful/sc-build-stateful-function-call.ts
++++ b/packages/solidcash/src/stateful/sc-build-stateful-function-call.ts
+@@ -33,6 +33,8 @@ export interface BuildStatefulFunctionCallHost {
+     valueChunkProductions?: NonNullable<PreparedAtomicMessageBusCall['valueChunkProductions']>;
+   };
+   functionName?: string;
++  /** The master input's nSequence (`setSequence`); only the ordinary stateful builder carries it. */
++  sequenceOverride?: number;
+   parentContract?: StatefulContract;
+   trySplitMergeBuild(): Promise<TransactionBuilder | undefined>;
+   /** The bus composition of a call whose graph runs as bus rows; undefined keeps the direct builder. */
+@@ -46,12 +48,24 @@ export interface BuildStatefulFunctionCallHost {
+ export async function buildStatefulFunctionCall(
+   host: BuildStatefulFunctionCallHost,
+ ): Promise<TransactionBuilder> {
++  // `setSequence` reaches only the ordinary stateful builder; refuse the routes that build their own transaction.
++  const refuseSequence = (route: string): void => {
++    if (host.sequenceOverride !== undefined) {
++      throw new Error(`setSequence is not supported for ${route} calls; only an ordinary stateful call sets it`);
++    }
++  };
+   const splitMergeBuilder = await host.trySplitMergeBuild();
+-  if (splitMergeBuilder) return splitMergeBuilder;
++  if (splitMergeBuilder) {
++    refuseSequence('split/merge');
++    return splitMergeBuilder;
++  }
+   // A participant's compiler route is one row of a composition already planned; only a root call plans one.
+   if (!host.compilerRoute) {
+     const composed = await host.busRowComposition();
+-    if (composed) return composed;
++    if (composed) {
++      refuseSequence('composed');
++      return composed;
++    }
+   }
+   const stb = await host.applyOverrides();
+   const buildFinalized = (): TransactionBuilder => {
+diff --git a/packages/solidcash/src/stateful/sc-resolve-blockhash-co-spends.ts b/packages/solidcash/src/stateful/sc-resolve-blockhash-co-spends.ts
+index dc41a042f..79efb84d6 100644
+--- a/packages/solidcash/src/stateful/sc-resolve-blockhash-co-spends.ts
++++ b/packages/solidcash/src/stateful/sc-resolve-blockhash-co-spends.ts
+@@ -100,7 +100,7 @@ export async function extractBlockhashReads(
+   const b = new CovenantTransactionBuilder({ provider: host.inner.provider });
+   b.locktime = 499999999; // max block-height locktime: satisfies any tx.time >= n (height) CLTV
+   const dataUnlockers = dataNftUtxos.map(() => createDataNftUnlocker(host.inner as any, 0, host.categoryId));
+-  b.addInput(masterUtxo, stateInputUnlocker);
++  b.addInput(masterUtxo, stateInputUnlocker, (masterUtxo as Partial<UnlockableUtxo>).options);
+   dataNftUtxos.forEach((u, i) => b.addInput(u, dataUnlockers[i]));
+   for (const cs of priorCoSpends) b.addInput(cs.utxo, cs.unlocker);
+   b.addOutput({ to: stateInputUnlocker.generateLockingBytecode(), amount: masterUtxo.satoshis, token: masterUtxo.token });
+@@ -132,7 +132,7 @@ export async function extractGraphBlockhashRead(
+     const i = b.inputs.length;
+     b.addInput({ txid: (0x8000 + i).toString(16).padStart(64, '0'), vout: 0, satoshis: 10000n }, inertUnlocker);
+   }
+-  b.addInput(masterUtxo, stateInputUnlocker);
++  b.addInput(masterUtxo, stateInputUnlocker, (masterUtxo as Partial<UnlockableUtxo>).options);
+   dataNftUtxos.forEach((u, i) => b.addInput(u, dataUnlockers[i]));
+   const priorByIndex = new Map(prior.map((p) => [base + p.slotOrdinal, p]));
+   while (b.inputs.length <= base + targetOrdinal) {
+@@ -246,7 +246,7 @@ export async function resolveIndirectBlockhashCoSpends(
+     const b = new CovenantTransactionBuilder({ provider: host.inner.provider });
+     b.locktime = MAX_HEIGHT_LOCKTIME;
+     const dataUnlockers = dataNftUtxos.map(() => createDataNftUnlocker(host.inner as any, 0, host.categoryId));
+-    b.addInput(masterUtxo, stateInputUnlocker);
++    b.addInput(masterUtxo, stateInputUnlocker, (masterUtxo as Partial<UnlockableUtxo>).options);
+     dataNftUtxos.forEach((u, i) => b.addInput(u, dataUnlockers[i]));
+     for (const input of front) b.addInput(input, input.unlocker);
+     b.addOutput({ to: stateInputUnlocker.generateLockingBytecode(), amount: masterUtxo.satoshis, token: masterUtxo.token });
+diff --git a/packages/solidcash/src/stateful/sc-resolve-create-builder-master-and-data-nfts.ts b/packages/solidcash/src/stateful/sc-resolve-create-builder-master-and-data-nfts.ts
+index 5bcf1deb3..5c4c27d80 100644
+--- a/packages/solidcash/src/stateful/sc-resolve-create-builder-master-and-data-nfts.ts
++++ b/packages/solidcash/src/stateful/sc-resolve-create-builder-master-and-data-nfts.ts
+@@ -3,7 +3,7 @@
+  */
+ 
+ import { binToHex } from '@bitauth/libauth/build/lib/format/hex.js';
+-import type { Utxo } from '../interfaces.js';
++import type { UnlockableUtxo, Utxo } from '../interfaces.js';
+ import type { OnChainState } from './StateReader.js';
+ 
+ export interface ResolveCreateBuilderMasterAndDataNftsInput {
+@@ -13,6 +13,7 @@ export interface ResolveCreateBuilderMasterAndDataNftsInput {
+   onChainState: OnChainState;
+   overrides?: {
+     masterUtxo?: Utxo;
++    masterSequence?: number;
+     dataNftUtxos?: Utxo[];
+     omitLocalFeeTail?: boolean;
+     blockBase?: number;
+@@ -40,7 +41,12 @@ export function resolveCreateBuilderMasterAndDataNfts(
+     throw new Error('Master UTXO not found on-chain');
+   }
+ 
+-  const masterUtxo = overrides?.masterUtxo ?? onChainState.masterUtxo!;
++  const chosenMaster = overrides?.masterUtxo ?? onChainState.masterUtxo!;
++  // `this.age` checks the master's own nSequence, so every probe that spends the master needs the call's sequence.
++  const masterUtxo = overrides?.masterSequence === undefined ? chosenMaster : {
++    ...chosenMaster,
++    options: { ...(chosenMaster as Partial<UnlockableUtxo>).options, sequence: overrides.masterSequence },
++  } as Utxo;
+   if ((globalThis as { process?: { env?: Record<string, string> } }).process?.env
+     ?.SOLIDC_DEBUG_DYNAMIC_CHUNK_ORDER === '1') {
+     const state = onChainState.state as Record<string, unknown> | undefined;
+diff --git a/packages/solidcash/src/stateful/sc-resolve-stateful-ecrecover-loop.ts b/packages/solidcash/src/stateful/sc-resolve-stateful-ecrecover-loop.ts
+index 7528dfd58..2f3f1f942 100644
+--- a/packages/solidcash/src/stateful/sc-resolve-stateful-ecrecover-loop.ts
++++ b/packages/solidcash/src/stateful/sc-resolve-stateful-ecrecover-loop.ts
+@@ -173,7 +173,7 @@ export async function resolveStatefulEcrecoverLoop(
+     const next = calls.length;
+     const probe = new CovenantTransactionBuilder({ provider: host.vmProvider });
+     if (locktime > 0) probe.setLocktime(locktime);
+-    probe.addInput(masterUtxo, stateInputUnlocker);
++    probe.addInput(masterUtxo, stateInputUnlocker, (masterUtxo as Partial<UnlockableUtxo>).options);
+     dataNftUtxos.forEach((utxo, index) => probe.addInput(utxo, dataNftUnlockers[index]));
+     // One placeholder past the most calls a probe follows: a run that reads it makes more.
+     const ahead = MAX_RECOVERY_LOOP_ITERATIONS + 1 - next;
+diff --git a/packages/solidcash/src/stateful/sc-resolve-stateful-keccak-loop.ts b/packages/solidcash/src/stateful/sc-resolve-stateful-keccak-loop.ts
+index 80bb7b72d..d8fd3519e 100644
+--- a/packages/solidcash/src/stateful/sc-resolve-stateful-keccak-loop.ts
++++ b/packages/solidcash/src/stateful/sc-resolve-stateful-keccak-loop.ts
+@@ -120,7 +120,7 @@ export async function resolveStatefulKeccakLoop(
+     const keccakInputBase = sidecarBase + trailingPredecessors.inputs.length;
+     // A run that follows the side-cars starts past this probe's k of them, so the master names it there.
+     const masterUnlocker = trailingSuccessors?.unlockerAt(keccakInputBase + k) ?? stateInputUnlocker;
+-    probe.addInput(masterUtxo, masterUnlocker);
++    probe.addInput(masterUtxo, masterUnlocker, (masterUtxo as Partial<UnlockableUtxo>).options);
+     dataNftUtxos.forEach((u, i) => probe.addInput(u, dataNftUnlockers[i]));
+     frontRegionInputs.forEach((u) => probe.addInputs([u])); // unlockable form: u already carries its unlocker
+     // A mapping loop that precedes the keccak loop in source order consumes its predecessors first; co-spend them
+diff --git a/packages/solidcash/src/stateful/sc-send-without-logical-nonce.ts b/packages/solidcash/src/stateful/sc-send-without-logical-nonce.ts
+index 03e4ad66d..9c5f95405 100644
+--- a/packages/solidcash/src/stateful/sc-send-without-logical-nonce.ts
++++ b/packages/solidcash/src/stateful/sc-send-without-logical-nonce.ts
+@@ -23,6 +23,7 @@ import type { StatefulTransactionBuilder } from './StatefulTransactionBuilder.js
+ export interface SendWithoutLogicalNonceHost {
+   functionName?: string;
+   locktimeOverride?: number;
++  sequenceOverride?: number;
+   parentContract?: StatefulContract;
+   trySplitMergeBuild(): Promise<TransactionBuilder | undefined>;
+   sendRawBuilder(builder: TransactionBuilder): Promise<TransactionDetails>;
+@@ -342,8 +343,16 @@ export async function buildBusRowComposition(
+ export async function sendWithoutLogicalNonce(
+   host: SendWithoutLogicalNonceHost,
+ ): Promise<TransactionDetails> {
++  // `setSequence` reaches only the ordinary stateful builder; refuse the routes that build their own transaction rather
++  // than drop the sequence there.
++  const refuseSequence = (route: string): void => {
++    if (host.sequenceOverride !== undefined) {
++      throw new Error(`setSequence is not supported for ${route} calls; only an ordinary stateful call sets it`);
++    }
++  };
+   const splitMergeBuilder = await host.trySplitMergeBuild();
+   if (splitMergeBuilder) {
++    refuseSequence('split/merge');
+     // Split/merge bypass the debug step (covenant scripts don't fully validate
+     // in the debug VM due to mock source output limitations).
+     return host.sendRawBuilder(splitMergeBuilder);
+@@ -358,6 +367,10 @@ export async function sendWithoutLogicalNonce(
+     const typedCallbackCalls = (await prepareTypedCallbackGraph(host))?.calls;
+     const stb = typedCallbackCalls ? undefined : await host.applyOverrides();
+     if (host.locktimeOverride !== undefined) stb?.setLocktime(host.locktimeOverride);
++    if (host.sequenceOverride !== undefined) stb?.setSequence(host.sequenceOverride);
++    if (typedCallbackCalls || (stb as { __preparedAtomicCalls?: unknown } | undefined)?.__preparedAtomicCalls) {
++      refuseSequence('composed');
++    }
+     try {
+       const preparedAtomicCalls = typedCallbackCalls ?? (stb as StatefulTransactionBuilder & {
+         __preparedAtomicCalls?: readonly PreparedAtomicMessageBusCall[];
+diff --git a/packages/solidcash/test/e2e/StatefulRelativeLock.test.ts b/packages/solidcash/test/e2e/StatefulRelativeLock.test.ts
+new file mode 100644
+index 000000000..95dfdd9c3
+--- /dev/null
++++ b/packages/solidcash/test/e2e/StatefulRelativeLock.test.ts
+@@ -0,0 +1,105 @@
++import { describe, expect, it } from 'vitest';
++import { binToHex, decodeTransaction } from '@bitauth/libauth';
++import { compileString } from '../direct-compile.js';
++import { Contract, SignatureTemplate } from '../../src/index.js';
++import { StatefulContract } from '../../src/stateful/index.js';
++import MockNetworkProvider from '../../src/network/MockNetworkProvider.js';
++import { alicePkh, alicePriv, alicePub, bobAddress, bobPkh } from '../fixture/vars.js';
++import type { Utxo } from '../../src/interfaces.js';
++import p2pkhArtifact from '../fixture/p2pkh.artifact.js';
++
++// `this.age` in a stateful function is OP_CHECKSEQUENCEVERIFY on the master input, so the call sets that input's
++// nSequence with `setSequence`; the node then holds the spend until the master is old enough (BIP68).
++const SRC = `pragma solidcash >=0.8.0;
++contract Matured() {
++  event Ticked(int count);
++  int counter;
++  function tick() {
++    require(this.age >= 3);
++    this.counter = this.counter + 1;
++  }
++  function payOut(bytes20 recipient) {
++    require(this.age >= 2);
++    this.counter = this.counter + 1;
++    emit Ticked(this.counter);
++    this.transfer(new LockingBytecodeP2PKH(recipient), 10000);
++  }
++}`;
++
++const DEFAULT_SEQUENCE = 0xfffffffe;
++
++const outcome = (send: Promise<unknown>): Promise<string> => send.then(
++  () => 'accepted',
++  (error: unknown) => String((error as Error)?.message ?? error),
++);
++
++async function deployMatured(): Promise<{ provider: MockNetworkProvider; contract: StatefulContract<any> }> {
++  const provider = new MockNetworkProvider();
++  const p2pkh = new Contract(p2pkhArtifact, [alicePkh], { provider });
++  const fundingUtxo: Utxo = { txid: 'a7'.repeat(32), vout: 0, satoshis: 200_000n };
++  await provider.addUtxo(p2pkh.address, fundingUtxo);
++  const { contract } = await StatefulContract.deploy(compileString(SRC), [], {
++    provider,
++    fundingUtxo,
++    funder: p2pkh.unlock.spend(alicePub, new SignatureTemplate(alicePriv)),
++    initialState: { counter: 0n },
++    changeAddress: p2pkh.address,
++    initialBalance: 50_000n,
++  });
++  return { provider, contract };
++}
++
++/** Mine one block at a time until `send` is accepted; every refusal on the way must be the BIP68 relative lock. */
++async function sendOnceMature(provider: MockNetworkProvider, send: () => Promise<unknown>): Promise<number> {
++  let mined = 0;
++  let result = await outcome(send());
++  while (result !== 'accepted' && mined < 6) {
++    expect(result).toMatch(/non-BIP68-final/);
++    await provider.mine(1);
++    mined++;
++    result = await outcome(send());
++  }
++  expect(result).toBe('accepted');
++  return mined;
++}
++
++describe('stateful this.age', () => {
++  it('puts the sequence on the master input only, and spends once the master is 3 blocks deep', async () => {
++    const { provider, contract } = await deployMatured();
++
++    expect(() => contract.call.tick().setSequence(-1)).toThrow(/32-bit unsigned integer/);
++    expect(() => contract.call.tick().setSequence(0x80000003)).toThrow(/disable flag/);
++
++    const unsigned = await contract.call.tick().setSequence(3).buildUnsigned();
++    const transaction = decodeTransaction(unsigned.transaction);
++    if (typeof transaction === 'string') throw new Error(transaction);
++    const masterIndex = unsigned.sourceOutputs.findIndex((output) => output.token?.nft?.capability === 'minting'
++      && binToHex(output.token.category) === contract.categoryId);
++    expect(masterIndex).toBeGreaterThanOrEqual(0);
++    transaction.inputs.forEach((input, index) => {
++      expect(input.sequenceNumber).toBe(index === masterIndex ? 3 : DEFAULT_SEQUENCE);
++    });
++
++    // The default sequence keeps the relative lock disabled, so the script's CHECKSEQUENCEVERIFY fails at any age.
++    expect(await outcome(contract.call.tick().send())).toMatch(/OP_CHECKSEQUENCEVERIFY/);
++
++    // With the sequence set, the script passes and the node refuses the spend until the master is mature.
++    expect(await outcome(contract.call.tick().setSequence(3).send())).toMatch(/non-BIP68-final/);
++    const mined = await sendOnceMature(provider, () => contract.call.tick().setSequence(3).send());
++    // BIP68 counts the confirming block: a 3-block lock needs at least two more blocks after the deploy.
++    expect(mined).toBeGreaterThanOrEqual(2);
++    expect(((await contract.getState()) as { counter?: bigint }).counter).toBe(1n);
++  });
++
++  it('derives the later state, event and transfer of a function that checks this.age', async () => {
++    const { provider, contract } = await deployMatured();
++    expect(await provider.getUtxos(bobAddress)).toHaveLength(0);
++
++    await sendOnceMature(provider, () => contract.call.payOut(bobPkh).setSequence(2).send());
++
++    expect(((await contract.getState()) as { counter?: bigint }).counter).toBe(1n);
++    const logs = await contract.queryFilter('Ticked');
++    expect(logs.map((log) => log.args)).toEqual([{ count: 1n }]);
++    expect((await provider.getUtxos(bobAddress)).map((utxo) => utxo.satoshis)).toEqual([10_000n]);
++  });
++});
+diff --git a/website/docs/language/globals.md b/website/docs/language/globals.md
+index b0c79327d..0f6213720 100644
+--- a/website/docs/language/globals.md
++++ b/website/docs/language/globals.md
+@@ -54,6 +54,12 @@ const oneTimeUnit = (1 << 22) | 1; // one 512-second unit
+ builder.addInput(utxo, unlocker, { sequence: oneTimeUnit });
+ ```
+ 
++In a stateful contract, `this.age` checks the contract's master input. Set that input's sequence on the call with
++`setSequence()`, for example `await sc.call.claim().setSequence(144).send()`. A value with the disable flag (bit 31)
++is refused. Only an ordinary call takes it: split and merge functions and composed calls (message-bus batches and
++typed callbacks) refuse a call that sets it. `this.age` inside a co-spent callee checks that callee's own master,
++which this option does not reach.
++
+ ## Introspection variables
+ Introspection functionality is used to create *covenant* contracts. Covenants are a technique used to put constraints on spending the money inside a smart contract. The main use case of this is limiting the addresses where money can be sent and the amount sent. To explore the possible uses of covenants inside smart contracts, read the [SolidCash Covenants Guide][covenants-guide].
+ 
+diff --git a/website/docs/sdk/stateful-contracts.md b/website/docs/sdk/stateful-contracts.md
+index c9c63f024..4bc608996 100644
+--- a/website/docs/sdk/stateful-contracts.md
++++ b/website/docs/sdk/stateful-contracts.md
+@@ -225,6 +225,7 @@ Other pending-call methods:
+ | `.withValue(amount)` | Deposit satoshis into the satoshi container (`payable` functions only; `msg.value`) |
+ | `.withMaxFee(satoshis)` | Refuse a transaction whose fee exceeds this ceiling |
+ | `.setLocktime(locktime)` | Set the transaction's nLocktime, for `tx.time` checks |
++| `.setSequence(sequence)` | Set the master input's nSequence to a BIP68 value, for `this.age` checks (ordinary calls only; split/merge and composed calls refuse it) |
+ | `.emitReturn()` | Publish the return value in a return-event output that off-chain readers can decode |
+ | `.buildUnsigned()` | Return the covenant transaction without funding or signatures, for an external wallet to complete |
+ 
+diff --git a/website/static/AGENTS.md b/website/static/AGENTS.md
+index 34cbd578a..cc600b0bb 100644
+--- a/website/static/AGENTS.md
++++ b/website/static/AGENTS.md
+@@ -673,7 +673,9 @@ require(this.age >= delay, "too early");  // relative: OP_CHECKSEQUENCEVERIFY on
+   `tx.inputs[i].sequenceNumber`. `tx.time` below 500,000,000 is a block height, above it a Unix time; `this.age`
+   counts blocks, or 512-second units for a time-based sequence.
+ - The spending transaction must carry a matching lock: SDK `setLocktime(n)` on the `TransactionBuilder`, and
+-  `addInput(utxo, unlocker, { sequence })` with a BIP68 value (time-based: `(1 << 22) | units`).
++  `addInput(utxo, unlocker, { sequence })` with a BIP68 value (time-based: `(1 << 22) | units`). A stateful call
++  sets its master input's sequence with `.setSequence(n)`, for example `sc.call.claim().setSequence(144).send()`
++  (ordinary calls only: split/merge and composed calls refuse it; a co-spent callee's `this.age` is not covered).
+ 
+ ### Locking Bytecode
+ 

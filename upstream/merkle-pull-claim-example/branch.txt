@@ -1,0 +1,4 @@
+branch: merkle-pull-claim-example
+base: eda85a88d752525ab1fe92f03e9dba04a45b518a (master, 0.51.0)
+commit: 4acf8ce9d (sits on 6a21551d8 in the working branch: upstream PR #4 applied as one commit, prereq/upstream-pr4.diff)
+stacked on: upstream PR #4 (setSequence, head 5b52811fbd4ae6250fce5791348f359a6208831f). The patch applies to the base alone; its test needs #4.

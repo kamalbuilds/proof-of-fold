@@ -1,0 +1,257 @@
+[
+  {
+    "id": "reg-multisig",
+    "guards": "2-of-3 operator signatures on proposeRoot",
+    "test": "test/registry.test.ts -t \"refuses one operator key\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/registry.test.ts (11 tests | 1 failed | 10 skipped) 1731ms |  Test Files  1 failed (1) |       Tests  1 failed | 10 skipped (11) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/registry.test.ts > RootRegistry: who may propose > refuses one operator key, an outsider, the guardian, and a repeated key | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 10 skipped (11)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "reg-window",
+    "guards": "audit window before activation",
+    "test": "test/registry.test.ts -t \"activates only after|cannot shorten\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/registry.test.ts (12 tests | 1 failed | 10 skipped) 60233ms |  Test Files  1 failed (1) |       Tests  1 failed | 1 passed | 10 skipped (12) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/registry.test.ts > RootRegistry: audit window > an operator cannot shorten the window by declaring a smaller age | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  2 passed | 10 skipped (12)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "reg-guardian",
+    "guards": "guardian-only cancel",
+    "test": "test/registry.test.ts -t \"only the guardian may cancel\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/registry.test.ts (11 tests | 1 failed | 10 skipped) 4536ms |  Test Files  1 failed (1) |       Tests  1 failed | 10 skipped (11) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/registry.test.ts > RootRegistry: guardian veto > only the guardian may cancel, and the guardian cannot propose | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 10 skipped (11)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "reg-pending",
+    "guards": "no second proposal while one is pending",
+    "test": "test/registry.test.ts -t \"refuses a second proposal\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/registry.test.ts (11 tests | 1 failed | 10 skipped) 3851ms |  Test Files  1 failed (1) |       Tests  1 failed | 10 skipped (11) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/registry.test.ts > RootRegistry: who may propose > refuses a second proposal while one is pending, and an epoch that does not increase | AssertionError: expected 'accepted' to match /AlreadyPending|pending/i"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 10 skipped (11)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "reg-epoch",
+    "guards": "epochs strictly increase, cancelled ones burn",
+    "test": "test/registry.test.ts -t \"epoch is burned\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/registry.test.ts (11 tests | 1 failed | 10 skipped) 10194ms |  Test Files  1 failed (1) |       Tests  1 failed | 10 skipped (11) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/registry.test.ts > RootRegistry: guardian veto > the guardian cancels a pending root, the root never activates, and its epoch is burned | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 10 skipped (11)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "reg-push-age",
+    "guards": "push window opens only after pushDelay idle blocks",
+    "test": "test/registry.test.ts -t \"cannot be opened early\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/registry.test.ts (12 tests | 1 failed | 11 skipped) 8176ms |  Test Files  1 failed (1) |       Tests  1 failed | 11 skipped (12) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/registry.test.ts > RootRegistry: push window > cannot be opened early by declaring a smaller age | AssertionError: expected 'accepted' to match /AuditWindowOpen|OP_CHECKSEQUENCEVERIFY/"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 11 skipped (12)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-proof",
+    "guards": "Merkle proof against the active root",
+    "test": "test/pool.test.ts -t \"refuses every forged claim\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 58899ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > refuses every forged claim and pays nobody | AssertionError: proof of Bob, paid to Mallory: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-receipt-key",
+    "guards": "receipt key is the hash of the leaf identity",
+    "test": "test/pool.test.ts -t \"refuses every forged claim\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 36831ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > refuses every forged claim and pays nobody | AssertionError: someone else's receipt key: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-already",
+    "guards": "a leaf pays only cumulative minus already paid",
+    "test": "test/pool.test.ts -t \"pays a leaf once\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " Test Files  1 failed (1) |       Tests  1 failed | 14 skipped (15) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > pays a leaf once, to its own address, whoever submits, and funds from the container | AssertionError: expected 'Cannot send stateful transaction: sta…' to match /NothingToClaim/ | \"Cannot send stateful transaction: state commitments could not be auto-derived. Reason: Full state derivation failed: Token container transfer am"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 14 skipped (15)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-negative",
+    "guards": "non-negative leaf index",
+    "test": "test/pool.test.ts -t \"refuses every forged claim\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 49334ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > refuses every forged claim and pays nobody | AssertionError: negative index: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-keysig",
+    "guards": "legacy key signature on claimWithKey",
+    "test": "test/pool.test.ts -t \"refuses a stranger\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 20294ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 1 (legacy key leaf) > refuses a stranger: wrong key, a signature from another key, a method 0 leaf, wrong receipt key | AssertionError: legacy pubkey, stranger's signature: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-pusher",
+    "guards": "operator signature on push",
+    "test": "test/pool.test.ts -t \"refuses small payouts and outsiders\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 94825ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: operator push > pays leaves that never claimed to their own identity, and refuses small payouts and outsiders | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-push-window",
+    "guards": "push only inside the registry push window",
+    "test": "test/pool.test.ts -t \"is refused until the registry\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 144247ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: operator push > is refused until the registry has opened the push window for the pool epoch | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-push-min",
+    "guards": "push minimum",
+    "test": "test/pool.test.ts -t \"refuses small payouts and outsiders\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 141881ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: operator push > pays leaves that never claimed to their own identity, and refuses small payouts and outsiders | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-sync",
+    "guards": "sync only when the registry has something new",
+    "test": "test/pool.test.ts -t \"never reads a pending root\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (14 tests | 1 failed | 13 skipped) 14996ms |  Test Files  1 failed (1) |       Tests  1 failed | 13 skipped (14) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > never reads a pending root: nothing to sync, and claims verify against the active root only | AssertionError: expected 'accepted' not to be 'accepted' // Object.is equality"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 13 skipped (14)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-token",
+    "guards": "reward category check on claim (a foreign token parked at the container lock cannot be pulled out)",
+    "test": "test/pool.test.ts -t \"foreign token parked\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " ❯ test/pool.test.ts (15 tests | 1 failed | 14 skipped) 25154ms |  Test Files  1 failed (1) |       Tests  1 failed | 14 skipped (15) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > a foreign token parked at the container address cannot be pulled out through a claim | AssertionError: expected 'accepted' to match /WrongToken/"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 14 skipped (15)"
+    },
+    "verdict": "killed"
+  },
+  {
+    "id": "pool-depth",
+    "guards": "proof depth bound",
+    "test": "test/pool.test.ts -t \"deeper than 24\"",
+    "broken": {
+      "exit": 1,
+      "compileError": false,
+      "tail": " Test Files  1 failed (1) |       Tests  1 failed | 14 skipped (15) | ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯ |  FAIL  test/pool.test.ts > FoldClaimPool: method 0 (BCH address leaf) > refuses a proof deeper than 24 levels | AssertionError: expected 'Cannot send stateful transaction: tok…' to match /proof too deep/ | \"Cannot send stateful transaction: token container transfer amounts could not be auto-derived (1 FT transfer(s) expected). Reason: VM failed at ip 101 opcode 85: Program failed an OP_VERIFY o"
+    },
+    "restored": {
+      "exit": 0,
+      "tail": " Test Files  1 passed (1) |       Tests  1 passed | 14 skipped (15)"
+    },
+    "verdict": "killed"
+  }
+]

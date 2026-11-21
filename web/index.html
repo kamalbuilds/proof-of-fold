@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FoldClaim: FoldingCash rewards, pulled with a Merkle proof</title>
+<meta name="description" content="Claim FoldingCash reward tokens on Bitcoin Cash with a Merkle proof. The browser signs, broadcasts over Electrum and verifies the root on chain.">
+<link rel="stylesheet" href="./src/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23efe9dc'/%3E%3Cpath d='M3 13V7h5V3h5' fill='none' stroke='%231f3fd0' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="preload" href="./fonts/Newsreader-400-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./fonts/IBMPlexMono-400.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body>
+<a class="skip" href="#claim">Skip to claim</a>
+<header class="top">
+  <div class="top-in">
+    <a class="mark" href="#top" aria-label="FoldClaim, top of page">FoldClaim</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#state">State</a><a href="#claim">Claim</a><a href="#proof">Proof</a><a href="#watch">Recompute</a><a href="#lookup">Lookup</a><a href="#cost">Cost</a><a href="#authority">Authority</a>
+    </nav>
+    <div class="netbox">
+      <label class="netpick" id="netpick" hidden><span class="sr">Network</span><select id="netselect"></select></label>
+      <span class="live" id="live"><i class="dot"></i><span id="live-text">connecting</span></span>
+    </div>
+  </div>
+</header>
+
+<main id="top" class="stage">
+  <section class="hero" aria-labelledby="h-hero">
+    <h1 id="h-hero">Folders pull<br>their rewards.</h1>
+    <p class="lede">FoldingCash rewards on Bitcoin Cash: one Merkle root per epoch sits on chain. A folder proves one leaf, signs with the key behind the <span class="mono">1&hellip;</span> address they already hold, and claims the cumulative total into a token-aware wallet. The contract keeps the receipt.</p>
+    <p class="hero-actions"><a class="btn primary" href="#claim">Claim tokens into your wallet</a><a class="btn" href="#proof">Watch a proof verify</a></p>
+  </section>
+
+  <aside class="plate panel" data-impeccable-ignore="hard-offset-shadow" id="proof" aria-labelledby="h-proof">
+    <div class="plate-head">
+      <h2 id="h-proof">The proof</h2>
+      <p class="plate-sub" id="plate-sub">Select a leaf</p>
+    </div>
+    <div class="plate-svgwrap"><svg id="plate-svg" role="img" aria-label="Merkle proof path from leaf to root"></svg></div>
+    <div class="plate-controls">
+      <button class="btn primary" id="verify" type="button" disabled>Verify path</button>
+      <button class="btn ghost" id="verify-reset" type="button" disabled>Reset</button>
+    </div>
+    <p class="plate-note" id="plate-note" aria-live="polite">Each sibling hash joins on the way up. Node = sha256(01 | left | right).</p>
+    <ul class="refs" id="plate-refs"></ul>
+    <div class="inspect" id="inspect" aria-live="polite"><span class="lbl">Node</span><span class="mono full" id="inspect-hex">Press a node to read its full hash.</span></div>
+  </aside>
+
+  <section class="sec" id="state" aria-labelledby="h-state">
+    <h2 id="h-state">On chain now</h2>
+    <dl class="sheet" id="sheet"></dl>
+    <div class="ledger-wrap">
+      <h3 class="sub">Addresses and deploy transactions</h3>
+      <dl class="sheet" id="addresses"></dl>
+    </div>
+  </section>
+
+  <section class="sec" id="claim" aria-labelledby="h-claim">
+    <h2 id="h-claim">Claim into your wallet</h2>
+    <p class="intro">Paste a token-aware address. The page assigns an unclaimed demo leaf, shows its published key, builds the claim in your browser, signs it locally and broadcasts it over an Electrum websocket. No server and no relayer.</p>
+    <form class="claimform" id="claimform" autocomplete="off">
+      <label class="field" for="dest"><span class="lbl">Destination, token-aware address</span>
+        <input id="dest" name="dest" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="bchtest:z...">
+      </label>
+      <p class="hint" id="dest-hint" role="status"></p>
+      <div id="claimer" class="claimer" hidden></div>
+      <div id="claim-gate" class="gate" hidden></div>
+      <p class="actions">
+        <button class="btn primary" id="claim-btn" type="submit" disabled>Claim</button>
+        <button class="btn" id="claim-next" type="button" hidden>Another demo leaf</button>
+      </p>
+    </form>
+    <ol class="steps" id="steps" aria-live="polite"></ol>
+    <div id="claim-result" class="result" hidden></div>
+    <div id="double" class="double" hidden>
+      <h3 class="sub">Claim the same leaf again</h3>
+      <p class="intro">The pool records the cumulative amount paid per leaf. A second claim of the same total has nothing to pay.</p>
+      <p class="actions"><button class="btn" id="double-btn" type="button">Submit the same claim again</button></p>
+      <div id="double-out" class="refusals"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="lookup" aria-labelledby="h-lookup">
+    <h2 id="h-lookup">Find a folder</h2>
+    <p class="intro" id="lookup-intro"></p>
+    <form class="lookupform" id="lookupform" autocomplete="off">
+      <label class="field" for="lookup-in"><span class="lbl">Legacy 1&hellip; address or hash160</span>
+        <input id="lookup-in" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="1... or 40 hex characters">
+      </label>
+      <p class="actions"><button class="btn primary" type="submit">Find leaf</button></p>
+    </form>
+    <p class="hint" id="lookup-hint" role="status"></p>
+    <div id="lookup-out"></div>
+    <h3 class="sub">Real rows in the pinned window</h3>
+    <div class="tablewrap"><table class="grid" id="rows"><thead><tr><th scope="col">Legacy address</th><th scope="col" class="num">Cumulative</th><th scope="col" class="num">Leaf</th><th scope="col"><span class="sr">Show proof</span></th></tr></thead><tbody></tbody></table></div>
+    <p class="actions"><button class="btn ghost" id="rows-more" type="button" hidden>Show all rows</button></p>
+  </section>
+</main>
+
+<section class="band" id="watch" aria-labelledby="h-watch">
+  <div class="band-in">
+    <h2 id="h-watch">Recompute from the API</h2>
+    <p class="intro" id="watch-intro"></p>
+    <p class="actions">
+      <button class="btn primary" id="watch-go" type="button">Recompute from the API</button>
+      <button class="btn" id="watch-tamper" type="button">Load a tampered copy</button>
+    </p>
+    <div id="watch-out" class="watch-out" aria-live="polite"></div>
+  </div>
+</section>
+
+<section class="sec wide" id="cost" aria-labelledby="h-cost">
+  <h2 id="h-cost">What it costs</h2>
+  <p class="intro">Sizes and fees are read from the transactions themselves over Electrum: size is the raw hex length divided by two, fee is inputs minus outputs.</p>
+  <div class="tablewrap"><table class="grid" id="cost-rows"><thead><tr><th scope="col">Transaction</th><th scope="col">Txid</th><th scope="col" class="num">Bytes</th><th scope="col" class="num">Fee, sat</th></tr></thead><tbody></tbody></table></div>
+  <div id="cost-model"></div>
+</section>
+
+<section class="sec wide" id="authority" aria-labelledby="h-auth">
+  <h2 id="h-auth">Who can do what</h2>
+  <div id="authority-out"></div>
+</section>
+
+<footer class="foot" id="sources">
+  <div class="foot-in" id="foot"></div>
+</footer>
+<script type="module" src="./src/main.ts"></script>
+</body>
+</html>

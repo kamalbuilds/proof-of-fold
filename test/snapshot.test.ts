@@ -4,6 +4,8 @@ import { buildEntries, buildTree, demoEntries, toBaseUnits, rawHash, parseDistro
 import { bytesToHex, rootFromProof } from '../src/merkle.js';
 import { hash160 } from '../src/identity.js';
 import { demoKey, publicKey } from '../src/keys.js';
+import { encodeBase58Address } from '@bitauth/libauth';
+import { sha256 } from '@noble/hashes/sha2.js';
 
 const raw = new Uint8Array(readFileSync(new URL('./fixtures/distro-2026-11-01_2026-11-20.json', import.meta.url)));
 
@@ -46,6 +48,19 @@ describe('GetDistro snapshot', () => {
     const pkh = hash160(publicKey(demoKey('chipnet', 3)));
     expect(tree.indexOf({ method: 1, identity: pkh })).toBeGreaterThanOrEqual(0);
   });
+  it('a legacy 1... address made from a key classifies to the hash160 that key signs for on BCH', () => {
+    const priv = demoKey('chipnet', 42);
+    const pkh = hash160(publicKey(priv));
+    const legacy = encodeBase58Address('p2pkh', pkh, { hash: (b: Uint8Array) => sha256(b) } as any);
+    expect(legacy.startsWith('1')).toBe(true);
+    const body = new TextEncoder().encode(JSON.stringify({ distro: [{ amount: 7, bitcoinAddress: legacy }], success: true }));
+    const b = buildEntries(body);
+    expect(b.entries).toHaveLength(1);
+    expect(b.entries[0].method).toBe(1);
+    expect(bytesToHex(b.entries[0].identity)).toBe(bytesToHex(pkh));
+    expect(b.entries[0].cumulative).toBe(700000000n);
+  });
+
   it('merges rows that share an address, lists unpayable rows, and refuses a failed response', () => {
     const synth = (rows: any[]) => new TextEncoder().encode(JSON.stringify({ distro: rows, success: true }).replace(/"amount":"([^"]+)"/g, '"amount":$1'));
     const a = '18SjyNbF8VdXaNAFCVfG4rAHUyvtdmoFvX';

@@ -118,4 +118,5 @@ export const claimKey = (c: Ctx, by: any, tree: MerkleTree, index: number, key: 
     o.proof ?? tree.proof(index).proofBytes, o.index ?? BigInt(index),
   ).send();
 };
+export const bytesToHexLocal = (b: Uint8Array) => binToHex(b);
 export { MerkleTree, hexToBin, binToHex, mine, p2pkhLock, leafKey, withRelativeLock };

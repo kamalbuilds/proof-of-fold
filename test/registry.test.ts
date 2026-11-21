@@ -136,4 +136,14 @@ describe('RootRegistry: push window', () => {
     expect((await c.registry.getState()).pushEpoch).toBe(1n);
     expect(await outcome(open(PUSH_DELAY))).not.toBe('accepted');      // already open for epoch 1
   });
+
+  it('cannot be opened early by declaring a smaller age', async () => {
+    const c = await setup();
+    await c.propose(c.op1, c.op2);
+    await mine(ROOT_DELAY + 2);
+    await c.activate();
+    await mine(100);                                                   // real age 100, far below 4032
+    expect(await outcome(c.lock(100, () => c.registry.call.openPush().send()))).toMatch(/AuditWindowOpen|OP_CHECKSEQUENCEVERIFY/);
+    expect((await c.registry.getState()).pushEpoch).toBe(0n);
+  });
 });

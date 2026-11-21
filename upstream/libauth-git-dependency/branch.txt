@@ -1,0 +1,4 @@
+branch: libauth-git-dependency
+base: eda85a88d752525ab1fe92f03e9dba04a45b518a (master, 0.51.0)
+commit: 73d0f2240
+stacked on: nothing

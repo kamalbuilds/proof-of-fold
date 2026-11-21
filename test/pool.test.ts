@@ -15,7 +15,7 @@ describe('FoldClaimPool: method 0 (BCH address leaf)', () => {
     expect(await tokensAt(c, c.entries[0].identity)).toBe(5_000n);
     expect(String(await c.pool.tokens[ASSET].amount)).toBe(String(POOL_TOKENS - 5_000n));
     expect(await tokensAt(c, c.mallory.getLockingBytecode())).toBe(0n);
-    expect(await outcome(claim(c, c.alice, tree, 0))).toMatch(/NothingToClaim|nothing|require/i);
+    expect(await outcome(claim(c, c.alice, tree, 0))).toMatch(/NothingToClaim/);
     expect(await tokensAt(c, c.entries[0].identity)).toBe(5_000n);
   });
 
@@ -49,7 +49,7 @@ describe('FoldClaimPool: method 0 (BCH address leaf)', () => {
     await publish(c, tree, 1n);
     const deep = new Uint8Array(25 * 32);
     deep.set(tree.proof(0).proofBytes);
-    expect(await outcome(claim(c, c.mallory, tree, 0, { proof: deep }))).not.toBe('accepted');
+    expect(await outcome(claim(c, c.mallory, tree, 0, { proof: deep }))).toMatch(/proof too deep/);
   });
 
   it('pays only the difference under a newer cumulative root, and users can skip epochs', async () => {
@@ -91,6 +91,18 @@ describe('FoldClaimPool: method 0 (BCH address leaf)', () => {
     expect(await outcome(c.pool.connect(c.mallory).call.syncRoot().send())).not.toBe('accepted');  // epoch 2 is only pending
     expect(await outcome(claim(c, c.mallory, t2, 0))).not.toBe('accepted');                       // t2 leaf is not in the active root
     expect(await outcome(claim(c, c.mallory, t1, 0))).toBe('accepted');
+  });
+
+  it('a foreign token parked at the container address cannot be pulled out through a claim', async () => {
+    const c = await setup();
+    const tree = tree0(c);
+    await publish(c, tree, 1n);
+    // Anyone can pay tokens of another category to the container lock. A claim naming that category would burn the
+    // leaf's receipt in worthless tokens, so the contract only accepts the reward category.
+    await c.provider.addUtxo(c.pool.getTokenContainerAddress(OTHER), { txid: 'd'.repeat(64), vout: 0, satoshis: 1_200n, token: { category: OTHER, amount: 1_000_000n } });
+    expect(await outcome(claim(c, c.mallory, tree, 0, { category: OTHER }))).toMatch(/WrongToken/);
+    expect(await outcome(claim(c, c.mallory, tree, 0))).toBe('accepted');       // Alice's real claim is untouched
+    expect(await tokensAt(c, c.entries[0].identity)).toBe(5_000n);
   });
 
   it('refuses a claim larger than the pool holds', async () => {

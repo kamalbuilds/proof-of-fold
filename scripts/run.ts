@@ -19,6 +19,7 @@ import { addressOf, publicKey, demoKey, lockingBytecodeOfAddress, tokenAddress, 
 import { attach, ecdsaSig, artifacts, claimWithKeyCall, findLeaf, pushCall, registryArgs, type Deployment, type EpochFile } from '../src/pool-client.ts';
 import { buildTree, demoEntries, distroUrl, fetchRaw, rawHash } from '../src/snapshot.ts';
 import { withRelativeLock } from '../src/relative-lock.ts';
+import { setFeeRate } from '../src/fee-rate.ts';
 import { hash160, p2pkhLock } from '../src/identity.ts';
 
 const [netArg, step, ...args] = process.argv.slice(2);
@@ -33,6 +34,22 @@ const logTx = (what: string, txid: string, extra: Record<string, unknown> = {}) 
   appendFileSync(file('txs.jsonl'), JSON.stringify({ at: new Date().toISOString(), net, what, txid, ...extra }) + '\n');
   console.log(what.padEnd(14), txid);
 };
+const logAndWait = async (what: string, txid: string, extra: Record<string, unknown> = {}) => {
+  logTx(what, txid, extra);
+  if (process.env.NO_WAIT !== '1') console.log('  confirmed with', await confirmed(txid), 'confirmation(s)');
+};
+const FEE = Number(process.env.FEE_RATE ?? (net === 'chipnet' ? 3 : 2));
+setFeeRate(FEE);
+/** Poll Electrum until the transaction has a confirmation: the next step spends its outputs and the registry timelocks need real blocks. */
+async function confirmed(txid: string, minutes = 20) {
+  const end = Date.now() + minutes * 60_000;
+  while (Date.now() < end) {
+    const v: any = await (p as any).performRequest('blockchain.transaction.get', txid, true).catch(() => null);
+    if (v?.confirmations) return v.confirmations;
+    await new Promise((r) => setTimeout(r, 15_000));
+  }
+  throw new Error(`${txid} still unconfirmed after ${minutes} minutes`);
+}
 const dep = (): Deployment => readJson('deployment.json');
 const p = providerOf(net);
 const deployer = () => signerOf(net, 'DEPLOYER', p);
@@ -45,7 +62,7 @@ async function sendSats(fromRole: string, outs: { lock: Uint8Array; sats: bigint
   const utxos = (await from.getUtxos()).filter((u) => !u.token);
   const total = utxos.reduce((n, u) => n + u.satoshis, 0n);
   const out = outs.reduce((n, o) => n + o.sats, 0n);
-  const fee = BigInt(Math.ceil((148 * utxos.length + 34 * (outs.length + 1) + 20) * 1.1));
+  const fee = BigInt(Math.ceil((148 * utxos.length + 34 * (outs.length + 1) + 20) * 1.1 * FEE));
   if (total < out + fee) throw new Error(`${fromRole} has ${total} sats, needs ${out + fee}`);
   const tb = new TransactionBuilder({ provider: p }).addInputs(utxos, from.unlockP2PKH());
   for (const o of outs) tb.addOutput({ to: o.lock, amount: o.sats } as any);
@@ -72,7 +89,23 @@ switch (step) {
     const outs = [];
     for (let i = 0; i < rest.length; i += 2) outs.push({ lock: toLock(rest[i]), sats: BigInt(rest[i + 1]) });
     const r = await sendSats(from, outs);
-    logTx('send', r.txid, { from, outputs: outs.length });
+    await logAndWait('send', r.txid, { from, outputs: outs.length });
+    break;
+  }
+  case 'mint-token': {
+    // Genesis of a fungible test token from the deployer: the category is the txid of the vout 0 input.
+    const supply = BigInt(args[0]);
+    const s = deployer();
+    const utxos = (await s.getUtxos()).filter((u) => !u.token && u.vout === 0 && u.satoshis >= 20_000n);
+    const genesis = utxos[0];
+    if (!genesis) throw new Error('deployer has no plain vout 0 utxo: send it one first');
+    const fee = BigInt(250 * FEE);
+    const r = await new TransactionBuilder({ provider: p })
+      .addInput(genesis, s.unlockP2PKH())
+      .addOutput({ to: p2pkhLock(s.pkh), amount: 1000n, token: { category: genesis.txid, amount: supply } } as any)
+      .addOutput({ to: p2pkhLock(s.pkh), amount: genesis.satoshis - 1000n - fee } as any)
+      .send();
+    await logAndWait('mint-token', r.txid, { category: genesis.txid, supply: String(supply) });
     break;
   }
   case 'epoch': {
@@ -100,12 +133,12 @@ switch (step) {
     const regFactory = new ContractFactory(artifacts.registryArtifact, s);
     const registry: any = await regFactory.deploy(...registryArgs({ ...base } as any));
     await registry.waitForDeployment();
-    logTx('deploy-registry', registry.deploymentTransaction().txid, { category: registry.categoryId });
+    await logAndWait('deploy-registry', registry.deploymentTransaction().txid, { category: registry.categoryId });
     const registryData = getDataNftLockingBytecode(registry.categoryId, hexToBin(registry.inner.lockingBytecode));
     const poolFactory = new ContractFactory(artifacts.poolArtifact, s);
     const pool: any = await poolFactory.deploy(hexToBin(tokenCategory), registryData, hexToBin(base.pusher));
     await pool.waitForDeployment();
-    logTx('deploy-pool', pool.deploymentTransaction().txid, { category: pool.categoryId });
+    await logAndWait('deploy-pool', pool.deploymentTransaction().txid, { category: pool.categoryId });
     writeJson('deployment.json', { ...base, registry: { categoryId: registry.categoryId, address: registry.address, deployTxid: registry.deploymentTransaction().txid }, pool: { categoryId: pool.categoryId, address: pool.address, deployTxid: pool.deploymentTransaction().txid } });
     console.log('registry', registry.address, '\npool    ', pool.address);
     break;
@@ -122,7 +155,7 @@ switch (step) {
     const rest = coin.token!.amount - units;
     if (rest > 0n) call.addOutput({ to: p2pkhLock(s.pkh), amount: 1000n, token: { category: d.tokenCategory, amount: rest } });
     const r = await call.send();
-    logTx('fund-pool', r.txid, { units: String(units) });
+    await logAndWait('fund-pool', r.txid, { units: String(units) });
     writeJson('deployment.json', { ...d, pool: { ...d.pool, fundTxid: r.txid } });
     break;
   }
@@ -131,35 +164,35 @@ switch (step) {
     const e: EpochFile = readJson(`epoch-${args[0]}.json`);
     const { registry } = attach(d, p);
     const r = await registry.connect(deployer()).call.proposeRoot(ecdsaSig(rolePriv('OPERATOR1')), ecdsaSig(rolePriv('OPERATOR2')), hexToBin(e.root), hexToBin(e.snapshotSha256), BigInt(e.epoch)).send();
-    logTx('propose-root', r.txid, { epoch: e.epoch, root: e.root, snapshot: e.snapshotSha256 });
+    await logAndWait('propose-root', r.txid, { epoch: e.epoch, root: e.root, snapshot: e.snapshotSha256 });
     break;
   }
   case 'activate': {
     const d = dep();
     const { registry } = attach(d, p);
     const r = await withRelativeLock(d.registry.categoryId, d.rootDelay, () => registry.connect(deployer()).call.activateRoot().send());
-    logTx('activate-root', r.txid);
+    await logAndWait('activate-root', r.txid);
     break;
   }
   case 'sync': {
     const d = dep();
     const { pool } = attach(d, p);
     const r = await pool.connect(deployer()).call.syncRoot().send();
-    logTx('sync-root', r.txid);
+    await logAndWait('sync-root', r.txid);
     break;
   }
   case 'open-push': {
     const d = dep();
     const { registry } = attach(d, p);
     const r = await withRelativeLock(d.registry.categoryId, d.pushDelay, () => registry.connect(deployer()).call.openPush().send());
-    logTx('open-push', r.txid);
+    await logAndWait('open-push', r.txid);
     break;
   }
   case 'burners': {
     const [count, sats] = args;
     const outs = Array.from({ length: Number(count) }, (_, i) => ({ lock: p2pkhLock(hash160(publicKey(demoKey(net, i)))), sats: BigInt(sats) }));
     const r = await sendSats('DESK', outs);
-    logTx('fund-burners', r.txid, { count: Number(count), sats });
+    await logAndWait('fund-burners', r.txid, { count: Number(count), sats });
     break;
   }
   case 'claim-demo':
@@ -175,7 +208,7 @@ switch (step) {
     const dest = lockingBytecodeOfAddress(args[1]);
     try {
       const r = await claimWithKeyCall(d, pool, p, priv, leaf, dest).send();
-      logTx(step, r.txid, { demo: i, cumulative: String(leaf.entry.cumulative), destination: args[1] });
+      await logAndWait(step, r.txid, { demo: i, cumulative: String(leaf.entry.cumulative), destination: args[1] });
     } catch (e: any) {
       if (step === 'claim-demo') throw e;
       console.log('REFUSED', String(e.message).split('\n')[0].slice(0, 300));
@@ -190,7 +223,7 @@ switch (step) {
     const e = epochFile.entries[Number(args[0])];
     const leaf = findLeaf(epochFile, e.method, hexToBin(e.identity))!;
     const r = await pushCall(d, pool, deployer(), rolePriv('PUSHER'), leaf).send();
-    logTx('push', r.txid, { index: Number(args[0]) });
+    await logAndWait('push', r.txid, { index: Number(args[0]) });
     break;
   }
   default: throw new Error(`unknown step ${step}`);
