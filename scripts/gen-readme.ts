@@ -147,7 +147,7 @@ Layout: \`contracts/\` (SolidCash), \`src/\` (Merkle tree, snapshot builder, poo
 
 ## Upstream
 
-Three pull-request packages for solidcash/solidcash are prepared in \`upstream/\`, each with a failing-then-passing test: the libauth git dependency that blocks \`npm install\` under \`allow-git=none\`, a Merkle pull-claim example with a showcase entry, and tests for the stateful \`this.age\` sequence. See \`upstream/README.md\`.
+Four pull-request packages for solidcash/solidcash are prepared in \`upstream/\`, each with a failing-then-passing test: the libauth git dependency that blocks \`npm install\` under \`allow-git=none\`, a Merkle pull-claim example with a showcase entry, tests for the stateful \`this.age\` sequence, and a fix for external state reads that pick a relocated data NFT by output order instead of its index tag. See \`upstream/README.md\`.
 `;
 const missing = out.split('\n').filter((l) => l.includes('MISSING'));
 if (missing.length) console.log('rows without a transaction yet:', missing.length);
