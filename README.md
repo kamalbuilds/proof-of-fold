@@ -28,7 +28,11 @@ FoldClaim builds its payout leaves from the live sponsor API (`api.folding.cash/
 | Epoch 3 activated | [`5c4631caa3934ef936f36d6a6c9bd0594f73cb57b109003559181ef7738e1e71`](https://chipnet.imaginary.cash/tx/5c4631caa3934ef936f36d6a6c9bd0594f73cb57b109003559181ef7738e1e71) |
 | Pool synced to epoch 3 | [`c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681`](https://chipnet.imaginary.cash/tx/c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681) |
 | Claim from the command line, demo claimer 149 | [`c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573`](https://chipnet.imaginary.cash/tx/c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573) |
+| Claim from the browser | [`9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d`](https://chipnet.imaginary.cash/tx/9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d) |
 | Epoch 4 proposed | [`02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446`](https://chipnet.imaginary.cash/tx/02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446) |
+| Epoch 4 activated | [`b4338097a252c35c0445805f2ed8a48b3ee51f76a0a6213275e5e5a5a32bda2e`](https://chipnet.imaginary.cash/tx/b4338097a252c35c0445805f2ed8a48b3ee51f76a0a6213275e5e5a5a32bda2e) |
+| Pool synced to epoch 4 | [`b3be6e163be3feadf86edef44119ea2b5907164a74e50d43371831c792354e2c`](https://chipnet.imaginary.cash/tx/b3be6e163be3feadf86edef44119ea2b5907164a74e50d43371831c792354e2c) |
+| Epoch 4 claim, only the difference | [`af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37`](https://chipnet.imaginary.cash/tx/af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37) |
 
 Every transaction can be read back with `npx tsx scripts/tx.ts chipnet <txid>`.
 
@@ -83,7 +87,7 @@ Measured claim size under production limits, by proof depth (real accepted claim
 
 ## Tests
 
-49 of 49 SolidHat tests pass on a mock network that enforces the BCH production limits (10,000 byte inputs, 100,000 byte transactions, dust and relay rules). 19 of 19 guard mutations are killed: break the guard, the named test turns red, restore it, green. See TESTS.md.
+51 of 51 SolidHat tests pass on a mock network that enforces the BCH production limits (10,000 byte inputs, 100,000 byte transactions, dust and relay rules). 19 of 19 guard mutations are killed: break the guard, the named test turns red, restore it, green. See TESTS.md.
 
 ## Run it
 

@@ -1,6 +1,6 @@
 {
-  "total": 49,
-  "passed": 49,
+  "total": 51,
+  "passed": 51,
   "files": [
     {
       "file": "test/registry.test.ts",
@@ -9,8 +9,8 @@
     },
     {
       "file": "test/pool.test.ts",
-      "tests": 15,
-      "covers": "method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, events, operator push gates"
+      "tests": 17,
+      "covers": "method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, events, operator push gates, push byte re-splitting, deposit-only fund"
     },
     {
       "file": "test/merkle.test.ts",

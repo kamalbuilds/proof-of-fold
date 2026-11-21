@@ -1,18 +1,18 @@
 # Tests
 
-Run: `npx solidhat test` (SolidHat project, mock network with BCH production limits: 10,000 byte inputs, 100,000 byte transactions, 128 byte commitments, dust and relay rules). 49 of 49 tests pass.
+Run: `npx solidhat test` (SolidHat project, mock network with BCH production limits: 10,000 byte inputs, 100,000 byte transactions, 128 byte commitments, dust and relay rules). 51 of 51 tests pass.
 
 | File | Tests | Covers |
 |---|---|---|
 | test/registry.test.ts | 13 | 2-of-3 proposals, Schnorr refusal, pending/epoch rules, audit window, events, guardian veto, push window |
-| test/pool.test.ts | 15 | method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, events, operator push gates |
+| test/pool.test.ts | 17 | method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, events, operator push gates, push byte re-splitting, deposit-only fund |
 | test/merkle.test.ts | 7 | tree, proofs, tamper, duplicates, little endian amount encoding |
 | test/snapshot.test.ts | 6 | GetDistro parsing, exact decimal amounts, legacy address to hash160, root reproducible from the stored response |
 | test/depth.test.ts | 8 | real claims at proof depth 1 to 24 under production limits |
 
 ## Every guard fails when broken
 
-Each row breaks one guard in the contract source, runs the named test (red expected), restores the source and runs the same test again (green expected). 17 of 17 mutations are killed. Reproduce: `npx tsx scripts/mutate.ts <id>`. Raw output: docs/MUTATIONS.json.
+Each row breaks one guard in the contract source, runs the named test (red expected), restores the source and runs the same test again (green expected). 19 of 19 mutations are killed. Reproduce: `npx tsx scripts/mutate.ts <id>`. Raw output: docs/MUTATIONS.json.
 
 | Mutation | Guard | Test | Broken | Restored |
 |---|---|---|---|---|
@@ -33,6 +33,8 @@ Each row breaks one guard in the contract source, runs the named test (red expec
 | pool-sync | sync only when the registry has something new | test/pool.test.ts -t "never reads a pending root" | red | green |
 | pool-token | reward category check on claim (a foreign token parked at the container lock cannot be pulled out) | test/pool.test.ts -t "foreign token parked" | red | green |
 | pool-depth | proof depth bound | test/pool.test.ts -t "deeper than 24" | red | green |
+| pool-method | push method byte is exactly 0x00 or 0x01 (no re-splitting of method and identity) | test/pool.test.ts -t "review finding H1" | red | green |
+| pool-fund | fund must deposit | test/pool.test.ts -t "review finding L2" | red | green |
 
 ## Claim size against proof depth
 
@@ -69,6 +71,18 @@ Read back with `npx tsx scripts/tx.ts chipnet <txid>` (size, fee, fee rate, conf
 | propose-root | 25939f03c701e1dfbcd0dab9c2af7cf07091f7fbeea595c614629797d2ad462f | 4706 | 9790 | 2.08 | 341419 |
 | cancel-pending | 28e744293a1832840df9b9faff4354b123ef96e778a8b352352e0fe361a888fa | 4097 | 8574 | 2.09 | 341421 |
 | propose-root | b738b6f492f9ba4efd598da880b11efeeaa966897c0006a7f7063e85ad11c4a4 | 4707 | 9794 | 2.08 | 341422 |
+| split-float | 1f693eedfedb10bc6bdbf7f1734c3fd50bea246146b7ac95a91d5c9343dfa295 |  |  |  |  |
+| claim-browser | d6139ea3f2e93ab9fda6c959ad979ec4a8bc7f1823f796362ab6d618aa4f5c87 |  |  |  |  |
+| deploy-pool | 51602319eeb32387bbbf65b5c8ef7178590ebe9a939441171fd08a9ff66eb8dd |  |  |  |  |
+| fund-pool | 04f4cbcbdee053014e871ef70ec468d05ed7e0692a6fdffc3c0791da8170dc86 |  |  |  |  |
+| activate-root | 5c4631caa3934ef936f36d6a6c9bd0594f73cb57b109003559181ef7738e1e71 |  |  |  |  |
+| sync-root | c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681 |  |  |  |  |
+| claim-demo | c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573 |  |  |  |  |
+| propose-root | 02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446 |  |  |  |  |
+| claim-browser | 9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d |  |  |  |  |
+| activate-root | b4338097a252c35c0445805f2ed8a48b3ee51f76a0a6213275e5e5a5a32bda2e |  |  |  |  |
+| sync-root | b3be6e163be3feadf86edef44119ea2b5907164a74e50d43371831c792354e2c |  |  |  |  |
+| claim-demo-delta | af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37 |  |  |  |  |
 
 ### Refusals and vetoes seen on chipnet
 
