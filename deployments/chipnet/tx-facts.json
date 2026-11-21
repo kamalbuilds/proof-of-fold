@@ -1,6 +1,6 @@
 {
-  "readAtTip": 341424,
-  "readAt": "2026-11-21T17:33:17.402Z",
+  "readAtTip": 341978,
+  "readAt": "2026-11-21T22:21:54.205Z",
   "facts": [
     {
       "what": "mint-token",
@@ -10,7 +10,7 @@
       "vout": 2,
       "fee": 500,
       "satPerByte": 1.91,
-      "confirmations": 102,
+      "confirmations": 656,
       "blockHeight": 341323
     },
     {
@@ -21,7 +21,7 @@
       "vout": 7,
       "fee": 1898,
       "satPerByte": 2.11,
-      "confirmations": 100,
+      "confirmations": 654,
       "blockHeight": 341325
     },
     {
@@ -32,7 +32,7 @@
       "vout": 6,
       "fee": 1842,
       "satPerByte": 2.19,
-      "confirmations": 99,
+      "confirmations": 653,
       "blockHeight": 341326
     },
     {
@@ -43,8 +43,8 @@
       "vout": 5,
       "fee": 12298,
       "satPerByte": 2.06,
-      "confirmations": 98,
-      "blockHeight": 341327
+      "confirmations": 653,
+      "blockHeight": 341326
     },
     {
       "what": "propose-root",
@@ -54,8 +54,8 @@
       "vout": 5,
       "fee": 9792,
       "satPerByte": 2.08,
-      "confirmations": 97,
-      "blockHeight": 341328
+      "confirmations": 652,
+      "blockHeight": 341327
     },
     {
       "what": "activate-root",
@@ -65,8 +65,8 @@
       "vout": 6,
       "fee": 10098,
       "satPerByte": 2.08,
-      "confirmations": 35,
-      "blockHeight": 341390
+      "confirmations": 590,
+      "blockHeight": 341389
     },
     {
       "what": "sync-root",
@@ -76,8 +76,8 @@
       "vout": 4,
       "fee": 13600,
       "satPerByte": 2.13,
-      "confirmations": 30,
-      "blockHeight": 341395
+      "confirmations": 586,
+      "blockHeight": 341393
     },
     {
       "what": "fund-burners",
@@ -87,8 +87,8 @@
       "vout": 5,
       "fee": 1721,
       "satPerByte": 2.31,
-      "confirmations": 27,
-      "blockHeight": 341398
+      "confirmations": 583,
+      "blockHeight": 341396
     },
     {
       "what": "fund-burners",
@@ -98,8 +98,8 @@
       "vout": 2,
       "fee": 520,
       "satPerByte": 2.37,
-      "confirmations": 25,
-      "blockHeight": 341400
+      "confirmations": 582,
+      "blockHeight": 341397
     },
     {
       "what": "claim-demo",
@@ -109,8 +109,8 @@
       "vout": 8,
       "fee": 16074,
       "satPerByte": 2.05,
-      "confirmations": 24,
-      "blockHeight": 341401
+      "confirmations": 580,
+      "blockHeight": 341399
     },
     {
       "what": "send",
@@ -120,8 +120,8 @@
       "vout": 2,
       "fee": 520,
       "satPerByte": 2.37,
-      "confirmations": 9,
-      "blockHeight": 341416
+      "confirmations": 565,
+      "blockHeight": 341414
     },
     {
       "what": "propose-root",
@@ -131,8 +131,8 @@
       "vout": 5,
       "fee": 9790,
       "satPerByte": 2.08,
-      "confirmations": 6,
-      "blockHeight": 341419
+      "confirmations": 563,
+      "blockHeight": 341416
     },
     {
       "what": "cancel-pending",
@@ -142,8 +142,8 @@
       "vout": 4,
       "fee": 8574,
       "satPerByte": 2.09,
-      "confirmations": 4,
-      "blockHeight": 341421
+      "confirmations": 561,
+      "blockHeight": 341418
     },
     {
       "what": "propose-root",
@@ -153,8 +153,173 @@
       "vout": 5,
       "fee": 9794,
       "satPerByte": 2.08,
-      "confirmations": 3,
-      "blockHeight": 341422
+      "confirmations": 561,
+      "blockHeight": 341418
+    },
+    {
+      "what": "split-float",
+      "txid": "1f693eedfedb10bc6bdbf7f1734c3fd50bea246146b7ac95a91d5c9343dfa295",
+      "bytes": 253,
+      "vin": 1,
+      "vout": 3,
+      "fee": 624,
+      "satPerByte": 2.47,
+      "confirmations": 561,
+      "blockHeight": 341418
+    },
+    {
+      "what": "claim-browser",
+      "txid": "d6139ea3f2e93ab9fda6c959ad979ec4a8bc7f1823f796362ab6d618aa4f5c87",
+      "bytes": 7847,
+      "vin": 7,
+      "vout": 8,
+      "fee": 16074,
+      "satPerByte": 2.05,
+      "confirmations": 562,
+      "blockHeight": 341417
+    },
+    {
+      "what": "deploy-pool",
+      "txid": "51602319eeb32387bbbf65b5c8ef7178590ebe9a939441171fd08a9ff66eb8dd",
+      "bytes": 842,
+      "vin": 1,
+      "vout": 6,
+      "fee": 1842,
+      "satPerByte": 2.19,
+      "confirmations": 508,
+      "blockHeight": 341471
+    },
+    {
+      "what": "fund-pool",
+      "txid": "04f4cbcbdee053014e871ef70ec468d05ed7e0692a6fdffc3c0791da8170dc86",
+      "bytes": 5953,
+      "vin": 3,
+      "vout": 5,
+      "fee": 12286,
+      "satPerByte": 2.06,
+      "confirmations": 505,
+      "blockHeight": 341474
+    },
+    {
+      "what": "activate-root",
+      "txid": "5c4631caa3934ef936f36d6a6c9bd0594f73cb57b109003559181ef7738e1e71",
+      "bytes": 4859,
+      "vin": 5,
+      "vout": 6,
+      "fee": 10098,
+      "satPerByte": 2.08,
+      "confirmations": 497,
+      "blockHeight": 341482
+    },
+    {
+      "what": "sync-root",
+      "txid": "c69134a64ee6fab12087d2ade3c75a19540245dfda3d555c94f14cddd38fd681",
+      "bytes": 6366,
+      "vin": 4,
+      "vout": 4,
+      "fee": 13600,
+      "satPerByte": 2.14,
+      "confirmations": 492,
+      "blockHeight": 341487
+    },
+    {
+      "what": "claim-demo",
+      "txid": "c7c18baa215d9ca0bac83e70ffeb996be755c67102259a0a9a2cb6cab688a573",
+      "bytes": 7841,
+      "vin": 7,
+      "vout": 8,
+      "fee": 16062,
+      "satPerByte": 2.05,
+      "confirmations": 484,
+      "blockHeight": 341495
+    },
+    {
+      "what": "propose-root",
+      "txid": "02c7700af0290defca363863a7c1543add159fe726bc19a70107fe1d407b3446",
+      "bytes": 4707,
+      "vin": 4,
+      "vout": 5,
+      "fee": 9792,
+      "satPerByte": 2.08,
+      "confirmations": 482,
+      "blockHeight": 341497
+    },
+    {
+      "what": "claim-browser",
+      "txid": "9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d",
+      "bytes": 7841,
+      "vin": 7,
+      "vout": 8,
+      "fee": 16062,
+      "satPerByte": 2.05,
+      "confirmations": 478,
+      "blockHeight": 341501
+    },
+    {
+      "what": "activate-root",
+      "txid": "b4338097a252c35c0445805f2ed8a48b3ee51f76a0a6213275e5e5a5a32bda2e",
+      "bytes": 4859,
+      "vin": 5,
+      "vout": 6,
+      "fee": 10098,
+      "satPerByte": 2.08,
+      "confirmations": 423,
+      "blockHeight": 341556
+    },
+    {
+      "what": "sync-root",
+      "txid": "b3be6e163be3feadf86edef44119ea2b5907164a74e50d43371831c792354e2c",
+      "bytes": 6366,
+      "vin": 4,
+      "vout": 4,
+      "fee": 13600,
+      "satPerByte": 2.14,
+      "confirmations": 422,
+      "blockHeight": 341557
+    },
+    {
+      "what": "claim-demo-delta",
+      "txid": "af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37",
+      "bytes": 7455,
+      "vin": 6,
+      "vout": 6,
+      "fee": 15264,
+      "satPerByte": 2.05,
+      "confirmations": 420,
+      "blockHeight": 341559
+    },
+    {
+      "what": "open-push",
+      "txid": "d0d38fa875dac24ce88663473a634963f9e36cce6b31cc756152f9ed35790160",
+      "bytes": 4604,
+      "vin": 5,
+      "vout": 6,
+      "fee": 9588,
+      "satPerByte": 2.08,
+      "confirmations": 17,
+      "blockHeight": 341962
+    },
+    {
+      "what": "sync-root",
+      "txid": "80c518fc32200c12d75dacdd5bc517e2100120f9e6dedfe53f65a12182c17965",
+      "bytes": 6366,
+      "vin": 4,
+      "vout": 4,
+      "fee": 13600,
+      "satPerByte": 2.14,
+      "confirmations": 15,
+      "blockHeight": 341964
+    },
+    {
+      "what": "push",
+      "txid": "9a137d4c144799568b830ece32527e25e539a898d805bc7f251a3df81f4f4ed0",
+      "bytes": 7746,
+      "vin": 7,
+      "vout": 8,
+      "fee": 15872,
+      "satPerByte": 2.05,
+      "confirmations": 15,
+      "blockHeight": 341964
     }
   ]
 }

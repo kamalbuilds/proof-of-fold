@@ -210,7 +210,9 @@ switch (step) {
   case 'open-push': {
     const d = dep();
     const { registry } = attach(d, p);
-    const r = await withRelativeLock(d.registry.categoryId, d.pushDelay, () => registry.connect(deployer()).call.openPush().send());
+    const s = deployer();
+    const coin = (await s.getUtxos()).filter((u) => !u.token).sort((a, b) => Number(b.satoshis - a.satoshis))[0];
+    const r = await withRelativeLock(d.registry.categoryId, d.pushDelay, () => registry.connect(s).call.openPush().addInput(coin, s.unlockP2PKH()).addOutput({ to: p2pkhLock(s.pkh), amount: coin.satoshis - BigInt(5200 * FEE) }).send());
     await logAndWait('open-push', r.txid);
     break;
   }

@@ -33,6 +33,8 @@ FoldClaim builds its payout leaves from the live sponsor API (`api.folding.cash/
 | Epoch 4 activated | [`b4338097a252c35c0445805f2ed8a48b3ee51f76a0a6213275e5e5a5a32bda2e`](https://chipnet.imaginary.cash/tx/b4338097a252c35c0445805f2ed8a48b3ee51f76a0a6213275e5e5a5a32bda2e) |
 | Pool synced to epoch 4 | [`b3be6e163be3feadf86edef44119ea2b5907164a74e50d43371831c792354e2c`](https://chipnet.imaginary.cash/tx/b3be6e163be3feadf86edef44119ea2b5907164a74e50d43371831c792354e2c) |
 | Epoch 4 claim, only the difference | [`af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37`](https://chipnet.imaginary.cash/tx/af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37) |
+| Registry opens the push window | [`d0d38fa875dac24ce88663473a634963f9e36cce6b31cc756152f9ed35790160`](https://chipnet.imaginary.cash/tx/d0d38fa875dac24ce88663473a634963f9e36cce6b31cc756152f9ed35790160) |
+| Operator push | [`9a137d4c144799568b830ece32527e25e539a898d805bc7f251a3df81f4f4ed0`](https://chipnet.imaginary.cash/tx/9a137d4c144799568b830ece32527e25e539a898d805bc7f251a3df81f4f4ed0) |
 
 Every transaction can be read back with `npx tsx scripts/tx.ts chipnet <txid>`.
 

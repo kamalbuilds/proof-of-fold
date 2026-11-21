@@ -21,6 +21,11 @@
       "when": "2026-11-21T17:28Z",
       "action": "guardian cancelPending on epoch 2, txid 28e744293a1832840df9b9faff4354b123ef96e778a8b352352e0fe361a888fa",
       "answer": "accepted; registry status Idle, highEpoch 2, activeEpoch stays 1"
+    },
+    {
+      "when": "2026-11-21T22:15Z",
+      "action": "openPush after the push window, then push of leaf 178 (demo claimer 120) by the operator key",
+      "answer": "accepted; 175 tFLDCH paid to the leaf P2PKH, txid 9a137d4c144799568b830ece32527e25e539a898d805bc7f251a3df81f4f4ed0"
     }
   ]
 }
