@@ -3,7 +3,7 @@
 !.env.example
 node_modules/
 dist/
-artifacts/
+/artifacts/
 cache/
 .progress/
 *.log

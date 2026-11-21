@@ -1,0 +1,1077 @@
+{
+  "contractName": "RootRegistry",
+  "constructorInputs": [
+    {
+      "name": "op1",
+      "type": "pubkey"
+    },
+    {
+      "name": "op2",
+      "type": "pubkey"
+    },
+    {
+      "name": "op3",
+      "type": "pubkey"
+    },
+    {
+      "name": "guardian",
+      "type": "pubkey"
+    },
+    {
+      "name": "rootDelay",
+      "type": "int256"
+    },
+    {
+      "name": "pushDelay",
+      "type": "int256"
+    }
+  ],
+  "abi": [
+    {
+      "name": "proposeRoot",
+      "selector": "af404644",
+      "inputs": [
+        {
+          "name": "a",
+          "type": "sig"
+        },
+        {
+          "name": "b",
+          "type": "sig"
+        },
+        {
+          "name": "root",
+          "type": "bytes32"
+        },
+        {
+          "name": "snapshot",
+          "type": "bytes32"
+        },
+        {
+          "name": "epoch",
+          "type": "int256"
+        }
+      ],
+      "writesState": true,
+      "requiredNftIndices": [
+        1,
+        2
+      ],
+      "sourceEffectOrder": "linear",
+      "emits": [
+        {
+          "eventName": "Proposed",
+          "eventSignature": "Proposed(int256,bytes32,bytes32)",
+          "emitIndex": 0
+        }
+      ],
+      "signatureGuard": {
+        "key": {
+          "kind": "constructorArg",
+          "name": "op1"
+        }
+      },
+      "blockLayout": {
+        "blockSize": 4,
+        "slots": [
+          {
+            "kind": "master",
+            "offset": 0
+          },
+          {
+            "kind": "dataNft",
+            "offset": 1,
+            "nftIndex": 1
+          },
+          {
+            "kind": "dataNft",
+            "offset": 2,
+            "nftIndex": 2
+          },
+          {
+            "kind": "event",
+            "offset": 3,
+            "slotIndex": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "cancelPending",
+      "selector": "824cfdfc",
+      "inputs": [
+        {
+          "name": "g",
+          "type": "sig"
+        }
+      ],
+      "writesState": true,
+      "requiredNftIndices": [
+        1
+      ],
+      "sourceEffectOrder": "linear",
+      "emits": [
+        {
+          "eventName": "Cancelled",
+          "eventSignature": "Cancelled(int256)",
+          "emitIndex": 0
+        }
+      ],
+      "signatureGuard": {
+        "key": {
+          "kind": "constructorArg",
+          "name": "guardian"
+        }
+      },
+      "blockLayout": {
+        "blockSize": 3,
+        "slots": [
+          {
+            "kind": "master",
+            "offset": 0
+          },
+          {
+            "kind": "dataNft",
+            "offset": 1,
+            "nftIndex": 1
+          },
+          {
+            "kind": "event",
+            "offset": 2,
+            "slotIndex": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "activateRoot",
+      "selector": "7d688155",
+      "inputs": [],
+      "writesState": true,
+      "requiredNftIndices": [
+        0,
+        1,
+        2
+      ],
+      "sourceEffectOrder": "linear",
+      "emits": [
+        {
+          "eventName": "Activated",
+          "eventSignature": "Activated(int256,bytes32)",
+          "emitIndex": 0
+        }
+      ],
+      "blockLayout": {
+        "blockSize": 5,
+        "slots": [
+          {
+            "kind": "master",
+            "offset": 0
+          },
+          {
+            "kind": "dataNft",
+            "offset": 1,
+            "nftIndex": 0
+          },
+          {
+            "kind": "dataNft",
+            "offset": 2,
+            "nftIndex": 1
+          },
+          {
+            "kind": "dataNft",
+            "offset": 3,
+            "nftIndex": 2
+          },
+          {
+            "kind": "event",
+            "offset": 4,
+            "slotIndex": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "openPush",
+      "selector": "a9061006",
+      "inputs": [],
+      "writesState": true,
+      "requiredNftIndices": [
+        0,
+        1
+      ],
+      "sourceEffectOrder": "linear",
+      "emits": [
+        {
+          "eventName": "PushOpened",
+          "eventSignature": "PushOpened(int256)",
+          "emitIndex": 0
+        }
+      ],
+      "blockLayout": {
+        "blockSize": 4,
+        "slots": [
+          {
+            "kind": "master",
+            "offset": 0
+          },
+          {
+            "kind": "dataNft",
+            "offset": 1,
+            "nftIndex": 0
+          },
+          {
+            "kind": "dataNft",
+            "offset": 2,
+            "nftIndex": 1
+          },
+          {
+            "kind": "event",
+            "offset": 3,
+            "slotIndex": 0
+          }
+        ]
+      }
+    }
+  ],
+  "bytecode": "76014c9c636d517f7c01007e817f6776014d9c636d527f7c01007e817f6776014e9c636d547f7c01007e817f67014f9d754f7c686868 91 OP_DEFINE 8263517f7c76817601510161a5630150945180777c6776014c9f63777f6701918a686867007c68 OP_1NEGATE OP_DEFINE 4f8a7c817c OP_1 OP_DEFINE 8276014ba16351807c7e677602ff00a1635280517f75014c7c7e7c7e675380527f75014d7c7e7c7e6868 82 OP_DEFINE 01207f75 OP_2 OP_DEFINE c0c7c0cd88c0cec0d188 84 OP_DEFINE c0c6c0cc88c0d0c0d3a169 86 OP_DEFINE 01207f75c0ce01207f7588 87 OP_DEFINE c0c77c01207c7e7c01237c7e7c036376c752797e0788ce01207f52887e787e4c7888c076cd78c7876376ce82776376d101207f757cce01207f75886775686776cd23aa20c42c11d1b80f1eae4c024fc765dd0c57701ca3a974579f9bbe600079e059b4f58788d100886867767676cdc0c788ccc0c6a269d1c0ce88d3c0d0a269c0c7c38c6576c09c6476c75279879169688c76009f667575687e787e0275517e019f8a 88 OP_DEFINE 01207c7e7c01207c7e7cc0c701237c7e7b7b04519d76c753797e0788ce01207f52887e52797e4988c076cd78c7876376ce82776376d101207f757cce01207f75886775686776cd23aa20c42c11d1b80f1eae4c024fc765dd0c57701ca3a974579f9bbe600079e059b4f58788d10088687e787e0275517e77019f8a 89 OP_DEFINE 527978d288c0ce01207f7506c0ce01207f7c01207b7e7e52797eaa02aa207c7e01877e78cd8876d101878a76d101207f77008876d30088cc02b004a1696d OP_16 OP_DEFINE 01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765301948a6866c476636501958a009c666875009d75 a9 OP_DEFINE c0ce76528a7601888a78517e006b0000c365658c76ce827778c75679879b78919b6676c75579876376c6537a937b7b6876ce5779877b937c76ce76557987917c82779a636c7853807e6b68769166756c826365537f7c817c6b76c7827701239c6376ce82777601209c7c01219c9b6376ce01207f7576577987637576ce827701209c01938a67bc56797c01898a7c76c77b8701938a686868756c8291666875 aa OP_DEFINE 0000c465658c76d159798778cd5879879b78919b6676cd5779876376cc537a937b7b6876d15979877b937c769166757ba169726d726d ab OP_DEFINE 58798201208875597982012088755a79558a75567a577a007b7b52717c567a53afc08bcf518a588a77518a5a8a7700885579c05293cf518a7c5288517f7c01208801207f77518a7c558a77a06953798201209d01207c7e55798201209d01207c7e57797682008701a18a58797682008701a18a517682008701a18a5a7a7682008701a18a01a08a01a08a1f88008814587262ea448b6247fd1261c2d87742ae4840f11a75029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c7880151c08bcf518a588a019b8a57797e55797ec08bd288c076c77cce528a538a5d8a015256797e54797ec05293d288c076c77cce528a538a5f8a567a7501978a555e8a6b6c6e7cc05393608a01a28a7551 af404644 OP_DEFINE 567a547aadc08bcf518a588a77518a5a8a775188007682008701a18ac08bcf518a588a77518a578a77518a7c558a019a8a01a18a1f88008814719c355e1d6caf51ff512d2defde00a0cf8728c275029000b27551c08bce01878ac076c77cce528a538a8bc7880151c08bcf518a588a019b8ac08bcf518a588a77518a578a01998a7ec08bcf518a588a77518a578a77518a7c558a019a8a01a18a7ec08bd288c076c77cce528a538a5d8a7b7574575e8a6b6c6e7cc05293608a6d01848a01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765201948a686601a38a6501988a63568a63765279945253a5696868769166019d8a8bcc88c08bd0c08bd3a1696d6d7551 824cfdfc OP_DEFINE c05293cf518a588a77518a5a8a775188547ab275c05293cf518a588a77518a578a01998ac05393cf518a7c5288598ac05293cf518a588a77518a578a77518a7c558a019a8a01a18a007682008701a18ac05293cf518a588a77518a578a77518a7c558a019a8a01a18ac05293cf518a588a77518a578a01998a7e1f88008814e180a2c19eb881b1c83d21fa8fa7d4e4aa923c5b75029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c788c05393ce01878ac076c77cce528a538a5393c788010056797e54797ec08bcf518a5c8a77518a7c558a75518a7c558a019a8a01a18a7ec08bd288c076c77cce528a538a5d8a015155797e53797ec05293cf518a588a77518a578a01998a7ec05293cf518a588a77518a578a77518a7c558a019a8a01a18a7ec05293d288c076c77cce528a538a5f8ac05393cfc05393d288c076c77cce528a538a5393c7788875c05393c7c05393cd88c05393cec05393d18801978a575e8a6b6c6e7cc05493608a6d01848a01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765401948a686601a38a6501988a63568a63765279945455a5696868769166019d8a5b8ac05393c6c05393cc88c05393d0c05393d3a1696d6d7551 7d688155 OP_DEFINE c05293cf518a588a77518a5a8a770088c08bcf518a5c8a77518a7c558a77c08bcf518a5c8a77518a7c558a75518a7c558a77a069557ab275c08bcf518a5c8a77518a7c558a019a8a01a18ac08bcf518a5c8a77518a7c558a019a8a01a18a1f88008814b4d9e5d96dfb9b09abf95513616531c763c98c7975029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c7880100c08bcf518a7c0088598a7ec08bcf518a5c8a77518a7c558a019a8a01a18a7e53797ec08bd288c076c77cce528a538a5d8ac05293cfc05293d288c076c77cce528a538a5f8a7b7574575e8a6b6c6e7cc05393608a01a28a6d7551 a9061006 OP_DEFINE 01207c7e7c01237c7e7c032776c752797e04885189217e787e4ca2528976539c63757c518ace01207f5288528a88c0ce01207f5188528a8876cdc0c78876d1c0ce8876d3c0d0a26976ccc0c687776776529c6375518ace01207f5288528a88c0ce01207f5188528a88c0c49f63c0d1826301207f75528a87916967756868516763518ace01207f5288528a7d88c0ce01207f75886775c0ce01207f5188528a88c0cfc0d28868c0c7c0cd88c0cec0d188c0d3c0d0a269c0c6c0cc8768687e7777aa02aa207c7e01877ec0 OP_3 OP_DEFINE 764f87636d014f6776817651a27c60a19a63758101509351806775517c7e6868 OP_4 OP_DEFINE 765102ff008d9301218001207f77010088 OP_5 OP_DEFINE 76d3009c78d28277929a78d27682770128a26376557f7505534349440187637682770123947f775379c7876775006867750068919a78cd015187919a OP_6 OP_DEFINE 7c7600a2697651a16975517f7c01208801207f OP_7 OP_DEFINE 7c5188517f7c01208801207f OP_8 OP_DEFINE 517f7c01208801207f758201209d01207c7e OP_9 OP_DEFINE 7c7600a2697651a169 OP_10 OP_DEFINE 8bcc88c08bd0c08bd3a169c05293c6c05293cc88c05293d0c05293d3a169 OP_11 OP_DEFINE 7c0088517f7c01208801207f OP_12 OP_DEFINE 8bc7788875c08bc7c08bcd88c08bcec08bd188 OP_13 OP_DEFINE 947600a06365769263778c006751686668757c OP_14 OP_DEFINE 5293c7788875c05293c7c05293cd88c05293cec05293d188 OP_15 OP_DEFINE 6376cd78c78876d178ce8876d378d0a26976d278cf8876ce76827701219c6301207f775287916967756868 93 OP_DEFINE 93a56476cd78c78876d278cf8876d178ce8868758b00 94 OP_DEFINE 8c76d1537987637c8c7c6876 95 OP_DEFINE c0ce01207f75517e4f 96 OP_DEFINE 557a75547a75537a757b7574 97 OP_DEFINE 658c76d153798778919b6676d1537987 98 OP_DEFINE 758201209d01207c7e 99 OP_DEFINE 7776820087 9a OP_DEFINE 758201209d01207c7e7e53797e 9b OP_DEFINE 01aa8a01ab8aa169c0ce01207f75c0c4 9c OP_DEFINE 6d7501868ac08bc6c0 9d OP_DEFINE 7501828a 9e OP_DEFINE 7777aa02aa207c7e01877e 9f OP_DEFINE 597a8201209d01207c7e7e a0 OP_DEFINE 636d01006782518763548a67019e8a6868 a1 OP_DEFINE 6d01848a01a98a019c8a6501988a63568a63765279945354a5696868769166019d8a5b8a6d a2 OP_DEFINE c476636501958a009c666875009d75019c8a a3 OP_DEFINE OP_DEPTH OP_1SUB OP_ROLL OP_SIZE OP_4 OP_NUMEQUALVERIFY OP_INVOKE",
+  "source": "pragma solidcash ^0.50.0;\n\nevent Proposed(int indexed epoch, bytes32 root, bytes32 snapshot);\nevent Activated(int indexed epoch, bytes32 root);\nevent Cancelled(int indexed epoch);\nevent PushOpened(int indexed epoch);\n\nerror NotPending();\nerror AuditWindowOpen(int needed);\nerror EpochNotIncreasing(int epoch, int floor);\nerror AlreadyPending(int epoch);\n\nenum Status { Idle, Pending }\n\n// RootRegistry: where FoldClaimPool learns which Merkle root to pay against.\n//\n// A root is proposed by two of three operator keys, then sits in a public audit window of ROOT_DELAY blocks\n// (a relative timelock on this contract's own UTXO, checked by the chain, so no key can shorten it). During the\n// window a separate guardian key can cancel the proposal but can never propose one. Activation is\n// permissionless once the window has passed. The window and the push delay are constructor arguments, fixed in the\n// contract address: the production profile is 144 and 4032 blocks, a demo profile can use fewer. Every proposal pins the SHA-256 of the exact F@H API response the\n// root was built from, so anyone can re-fetch it, rebuild the tree and compare.\ncontract RootRegistry(pubkey op1, pubkey op2, pubkey op3, pubkey guardian, int rootDelay, int pushDelay) {\n\n    // The first three are read by FoldClaimPool through IRootRegistry: keep their order.\n    bytes32 public activeRoot;\n    int public activeEpoch;\n    int public pushEpoch;               // epoch whose root has been active long enough for operator push\n    bytes32 public activeSnapshot;\n    Status public status;\n    bytes32 public pendingRoot;\n    int public pendingEpoch;\n    bytes32 public pendingSnapshot;\n    int public highEpoch;               // highest epoch ever proposed, cancelled ones included\n\n    modifier twoOfThree(sig a, sig b) {\n        require(checkMultiSig([a, b], [op1, op2, op3]));\n        _;\n    }\n\n    modifier onlyGuardian(sig g) {\n        require(checkSig(g, guardian));\n        _;\n    }\n\n    function proposeRoot(sig a, sig b, bytes32 root, bytes32 snapshot, int epoch) twoOfThree(a, b) {\n        require(this.status == Status.Idle, AlreadyPending(this.pendingEpoch));\n        require(epoch > this.highEpoch, EpochNotIncreasing(epoch, this.highEpoch));\n        this.pendingRoot = root;\n        this.pendingSnapshot = snapshot;\n        this.pendingEpoch = epoch;\n        this.highEpoch = epoch;\n        this.status = Status.Pending;\n        emit Proposed(epoch, root, snapshot);\n    }\n\n    function cancelPending(sig g) onlyGuardian(g) {\n        require(this.status == Status.Pending, NotPending());\n        this.status = Status.Idle;\n        emit Cancelled(this.pendingEpoch);\n    }\n\n    function activateRoot() {\n        require(this.status == Status.Pending, NotPending());\n        require(this.age >= rootDelay, AuditWindowOpen(rootDelay));\n        this.activeRoot = this.pendingRoot;\n        this.activeSnapshot = this.pendingSnapshot;\n        this.activeEpoch = this.pendingEpoch;\n        this.status = Status.Idle;\n        emit Activated(this.pendingEpoch, this.pendingRoot);\n    }\n\n    function openPush() {\n        require(this.status == Status.Idle, \"a proposal is pending\");\n        require(this.activeEpoch > this.pushEpoch, \"push already open for this epoch\");\n        require(this.age >= pushDelay, AuditWindowOpen(pushDelay));\n        this.pushEpoch = this.activeEpoch;\n        emit PushOpened(this.activeEpoch);\n    }\n}\n",
+  "debug": {
+    "bytecode": "3676014c9c636d517f7c01007e817f6776014d9c636d527f7c01007e817f6776014e9c636d547f7c01007e817f67014f9d754f7c686868019189278263517f7c76817601510161a5630150945180777c6776014c9f63777f6701918a686867007c684f89054f8a7c817c51892a8276014ba16351807c7e677602ff00a1635280517f75014c7c7e7c7e675380527f75014d7c7e7c7e68680182890401207f7552890ac0c7c0cd88c0cec0d1880184890bc0c6c0cc88c0d0c0d3a1690186890b01207f75c0ce01207f75880187894ca3c0c77c01207c7e7c01237c7e7c036376c752797e0788ce01207f52887e787e4c7888c076cd78c7876376ce82776376d101207f757cce01207f75886775686776cd23aa20c42c11d1b80f1eae4c024fc765dd0c57701ca3a974579f9bbe600079e059b4f58788d100886867767676cdc0c788ccc0c6a269d1c0ce88d3c0d0a269c0c7c38c6576c09c6476c75279879169688c76009f667575687e787e0275517e019f8a0188894c7b01207c7e7c01207c7e7cc0c701237c7e7b7b04519d76c753797e0788ce01207f52887e52797e4988c076cd78c7876376ce82776376d101207f757cce01207f75886775686776cd23aa20c42c11d1b80f1eae4c024fc765dd0c57701ca3a974579f9bbe600079e059b4f58788d10088687e787e0275517e77019f8a0189893e527978d288c0ce01207f7506c0ce01207f7c01207b7e7e52797eaa02aa207c7e01877e78cd8876d101878a76d101207f77008876d30088cc02b004a1696d60893701968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765301948a6866c476636501958a009c666875009d7501a9894c9fc0ce76528a7601888a78517e006b0000c365658c76ce827778c75679879b78919b6676c75579876376c6537a937b7b6876ce5779877b937c76ce76557987917c82779a636c7853807e6b68769166756c826365537f7c817c6b76c7827701239c6376ce82777601209c7c01219c9b6376ce01207f7576577987637576ce827701209c01938a67bc56797c01898a7c76c77b8701938a686868756c829166687501aa89360000c465658c76d159798778cd5879879b78919b6676cd5779876376cc537a937b7b6876d15979877b937c769166757ba169726d726d01ab894d200158798201208875597982012088755a79558a75567a577a007b7b52717c567a53afc08bcf518a588a77518a5a8a7700885579c05293cf518a7c5288517f7c01208801207f77518a7c558a77a06953798201209d01207c7e55798201209d01207c7e57797682008701a18a58797682008701a18a517682008701a18a5a7a7682008701a18a01a08a01a08a1f88008814587262ea448b6247fd1261c2d87742ae4840f11a75029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c7880151c08bcf518a588a019b8a57797e55797ec08bd288c076c77cce528a538a5d8a015256797e54797ec05293d288c076c77cce528a538a5f8a567a7501978a555e8a6b6c6e7cc05393608a01a28a755104af404644894d0f01567a547aadc08bcf518a588a77518a5a8a775188007682008701a18ac08bcf518a588a77518a578a77518a7c558a019a8a01a18a1f88008814719c355e1d6caf51ff512d2defde00a0cf8728c275029000b27551c08bce01878ac076c77cce528a538a8bc7880151c08bcf518a588a019b8ac08bcf518a588a77518a578a01998a7ec08bcf518a588a77518a578a77518a7c558a019a8a01a18a7ec08bd288c076c77cce528a538a5d8a7b7574575e8a6b6c6e7cc05293608a6d01848a01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765201948a686601a38a6501988a63568a63765279945253a5696868769166019d8a8bcc88c08bd0c08bd3a1696d6d755104824cfdfc894de101c05293cf518a588a77518a5a8a775188547ab275c05293cf518a588a77518a578a01998ac05393cf518a7c5288598ac05293cf518a588a77518a578a77518a7c558a019a8a01a18a007682008701a18ac05293cf518a588a77518a578a77518a7c558a019a8a01a18ac05293cf518a588a77518a578a01998a7e1f88008814e180a2c19eb881b1c83d21fa8fa7d4e4aa923c5b75029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c788c05393ce01878ac076c77cce528a538a5393c788010056797e54797ec08bcf518a5c8a77518a7c558a75518a7c558a019a8a01a18a7ec08bd288c076c77cce528a538a5d8a015155797e53797ec05293cf518a588a77518a578a01998a7ec05293cf518a588a77518a578a77518a7c558a019a8a01a18a7ec05293d288c076c77cce528a538a5f8ac05393cfc05393d288c076c77cce528a538a5393c7788875c05393c7c05393cd88c05393cec05393d18801978a575e8a6b6c6e7cc05493608a6d01848a01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765401948a686601a38a6501988a63568a63765279945455a5696868769166019d8a5b8ac05393c6c05393cc88c05393d0c05393d3a1696d6d7551047d688155894d0001c05293cf518a588a77518a5a8a770088c08bcf518a5c8a77518a7c558a77c08bcf518a5c8a77518a7c558a75518a7c558a77a069557ab275c08bcf518a5c8a77518a7c558a019a8a01a18ac08bcf518a5c8a77518a7c558a019a8a01a18a1f88008814b4d9e5d96dfb9b09abf95513616531c763c98c7975029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c7880100c08bcf518a7c0088598a7ec08bcf518a5c8a77518a7c558a019a8a01a18a7e53797ec08bd288c076c77cce528a538a5d8ac05293cfc05293d288c076c77cce528a538a5f8a7b7574575e8a6b6c6e7cc05393608a01a28a6d755104a9061006894cca01207c7e7c01237c7e7c032776c752797e04885189217e787e4ca2528976539c63757c518ace01207f5288528a88c0ce01207f5188528a8876cdc0c78876d1c0ce8876d3c0d0a26976ccc0c687776776529c6375518ace01207f5288528a88c0ce01207f5188528a88c0c49f63c0d1826301207f75528a87916967756868516763518ace01207f5288528a7d88c0ce01207f75886775c0ce01207f5188528a88c0cfc0d28868c0c7c0cd88c0cec0d188c0d3c0d0a269c0c6c0cc8768687e7777aa02aa207c7e01877ec0538920764f87636d014f6776817651a27c60a19a63758101509351806775517c7e6868548911765102ff008d9301218001207f7701008855893c76d3009c78d28277929a78d27682770128a26376557f7505534349440187637682770123947f775379c7876775006867750068919a78cd015187919a5689137c7600a2697651a16975517f7c01208801207f57890c7c5188517f7c01208801207f588912517f7c01208801207f758201209d01207c7e5989097c7600a2697651a1695a891e8bcc88c08bd0c08bd3a169c05293c6c05293cc88c05293d0c05293d3a1695b890c7c0088517f7c01208801207f5c89138bc7788875c08bc7c08bcd88c08bcec08bd1885d8913947600a06365769263778c006751686668757c5e89185293c7788875c05293c7c05293cd88c05293cec05293d1885f892b6376cd78c78876d178ce8876d378d0a26976d278cf8876ce76827701219c6301207f7752879169677568680193891693a56476cd78c78876d278cf8876d178ce8868758b000194890c8c76d1537987637c8c7c687601958909c0ce01207f75517e4f0196890c557a75547a75537a757b757401978910658c76d153798778919b6676d153798701988909758201209d01207c7e019989057776820087019a890d758201209d01207c7e7e53797e019b891001aa8a01ab8aa169c0ce01207f75c0c4019c89096d7501868ac08bc6c0019d89047501828a019e890b7777aa02aa207c7e01877e019f890b597a8201209d01207c7e7e01a08911636d01006782518763548a67019e8a686801a189256d01848a01a98a019c8a6501988a63568a63765279945354a5696868769166019d8a5b8a6d01a28912c476636501958a009c666875009d75019c8a01a389748c7a82549d8a",
+    "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;46:4:55:5;;;57::61;;;63::71;;;73::79;;;23:0:80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+    "logs": [],
+    "requires": [],
+    "functionDebug": {
+      "af404644": {
+        "requires": [
+          {
+            "ip": 30,
+            "line": 37
+          },
+          {
+            "ip": 45,
+            "line": 47,
+            "message": "require failed: AlreadyPending(...)"
+          },
+          {
+            "ip": 72,
+            "line": 48,
+            "message": "require failed: EpochNotIncreasing(...)"
+          }
+        ],
+        "logs": [],
+        "sourceMap": "46:39:46:51;;;;;;:53::69;;;;;;:71::80;;;;;:93::94;;:96::97;;37:16:37:54;:31::32;:34::35;:30::36:1;:39::47:0;;:49::52;;:38::53:1;:8::56;47:16:47:27:0;;;;;;;;;;;;;:31::42;:8::79:1;48:16:48:21:0;;:24::38;;;;;;;;;;;;;;;;;;;;;;;:16:::1;:8::83;49:27:49:31:0;;:8::32:1;;;;;;50:31:50:39:0;;:8::40:1;;;;;;51:28:51:33:0;;:8::34:1;;;;;;52:25:52:30:0;;:8::31:1;;;;;;53:22:53:36:0;:8::37:1;;;;;;54:22:54:27:0;;:8::45:1;;;;;;:29::33:0;;:35::43;;:8::45:1;46:4:55:5:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;::::1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "824cfdfc": {
+        "requires": [
+          {
+            "ip": 4,
+            "line": 42
+          },
+          {
+            "ip": 19,
+            "line": 58,
+            "message": "require failed: NotPending(...)"
+          }
+        ],
+        "logs": [],
+        "sourceMap": "57:47:57:48;;42:28:42:36;;:8::39:1;58:16:58:27:0;;;;;;;;;;;;;:31::45;:8::61:1;59:22:59:33:0;:8::34:1;;;;;;60:23:60:40:0;;;;;;;;;;;;;;;;;;;;:8::42:1;;;57:4:61:5:0;;;;;;;;;;;;;;;;;::::1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "7d688155": {
+        "requires": [
+          {
+            "ip": 15,
+            "line": 64,
+            "message": "require failed: NotPending(...)"
+          },
+          {
+            "ip": 18,
+            "line": 65
+          }
+        ],
+        "logs": [],
+        "sourceMap": "64:16:64:27;;;;;;;;;;;;;;:31::45;:8::61:1;65:28:65:37:0;;:8::67:1;;66:26:66:42:0;;;;;;;;;;;;;;;67:30:67:50;;;;;;;;;;;68:27:68:44;;;;;;;;;;;;;;;;;;;;;:8::45:1;;69:22:69:33:0;:8::34:1;;;;;;70:23:70:40:0;;;;;;;;;;;;;;;;;;;;;:8::60:1;;:42::58:0;;;;;;;;;;;;;;;:8::60:1;;63:4:71:5:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;::::1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "a9061006": {
+        "requires": [
+          {
+            "ip": 15,
+            "line": 74,
+            "message": "a proposal is pending"
+          },
+          {
+            "ip": 51,
+            "line": 75,
+            "message": "push already open for this epoch"
+          },
+          {
+            "ip": 54,
+            "line": 76
+          }
+        ],
+        "logs": [],
+        "sourceMap": "74:16:74:27;;;;;;;;;;;;;;:31::42;:8::69:1;75:16:75:32:0;;;;;;;;;;;;;;:35::49;;;;;;;;;;;;;;;;;;;;:16:::1;:8::87;76:28:76:37:0;;:8::67:1;;77:25:77:41:0;;;;;;;;;;;;;;;:8::42:1;;78:24:78:40:0;;;;;;;;;;;;;;;:8::42:1;;;73:4:79:5:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;::::1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      }
+    },
+    "invokeDebug": {
+      "2": {
+        "bytecode": "01207f75",
+        "name": "compiler helper 2",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;"
+      },
+      "3": {
+        "bytecode": "01207c7e7c01237c7e7c032776c752797e04885189217e787e4ca2528976539c63757c518ace01207f5288528a88c0ce01207f5188528a8876cdc0c78876d1c0ce8876d3c0d0a26976ccc0c687776776529c6375518ace01207f5288528a88c0ce01207f5188528a88c0c49f63c0d1826301207f75528a87916967756868516763518ace01207f5288528a7d88c0ce01207f75886775c0ce01207f5188528a88c0cfc0d28868c0c7c0cd88c0cec0d188c0d3c0d0a269c0c6c0cc8768687e7777aa02aa207c7e01877ec0",
+        "name": "outlined source span 3",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "4": {
+        "bytecode": "764f87636d014f6776817651a27c60a19a63758101509351806775517c7e6868",
+        "name": "outlined source span 4",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "51:8:51:34:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "5": {
+        "bytecode": "765102ff008d9301218001207f77010088",
+        "name": "outlined source span 5",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:71:46:80;;;;;;;;;;;"
+      },
+      "6": {
+        "bytecode": "76d3009c78d28277929a78d27682770128a26376557f7505534349440187637682770123947f775379c7876775006867750068919a78cd015187919a",
+        "name": "outlined source span 6",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "7": {
+        "bytecode": "7c7600a2697651a16975517f7c01208801207f",
+        "name": "outlined source span 7",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "60:23:60:40;;;;;;;;;;;;;;;;"
+      },
+      "8": {
+        "bytecode": "7c5188517f7c01208801207f",
+        "name": "outlined source span 8",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "47:16:47:27;;;;;;;;;"
+      },
+      "9": {
+        "bytecode": "517f7c01208801207f758201209d01207c7e",
+        "name": "outlined source span 9",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "67:30:67:50;;;;;;;;:8::51:1;;;;;"
+      },
+      "10": {
+        "bytecode": "7c7600a2697651a169",
+        "name": "outlined source span 10",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "47:16:47:27;;;;;;;;"
+      },
+      "11": {
+        "bytecode": "8bcc88c08bd0c08bd3a169c05293c6c05293cc88c05293d0c05293d3a169",
+        "name": "outlined source span 11",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "12": {
+        "bytecode": "7c0088517f7c01208801207f",
+        "name": "outlined source span 12",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "63:4:71:5:1;;;;;;;;;"
+      },
+      "13": {
+        "bytecode": "8bc7788875c08bc7c08bcd88c08bcec08bd188",
+        "name": "outlined source span 13",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;;;;"
+      },
+      "14": {
+        "bytecode": "947600a06365769263778c006751686668757c",
+        "name": "outlined source span 14",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;;;;"
+      },
+      "15": {
+        "bytecode": "5293c7788875c05293c7c05293cd88c05293cec05293d188",
+        "name": "outlined source span 15",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "16": {
+        "bytecode": "527978d288c0ce01207f7506c0ce01207f7c01207b7e7e52797eaa02aa207c7e01877e78cd8876d101878a76d101207f77008876d30088cc02b004a1696d",
+        "name": "compiler helper 16",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-2": {
+        "bytecode": "8276014ba16351807c7e677602ff00a1635280517f75014c7c7e7c7e675380527f75014d7c7e7c7e6868",
+        "name": "compiler helper -2",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-4": {
+        "bytecode": "c0c7c0cd88c0cec0d188",
+        "name": "compiler helper -4",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;"
+      },
+      "-6": {
+        "bytecode": "c0c6c0cc88c0d0c0d3a169",
+        "name": "compiler helper -6",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;"
+      },
+      "-7": {
+        "bytecode": "01207f75c0ce01207f7588",
+        "name": "compiler helper -7",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;"
+      },
+      "-8": {
+        "bytecode": "c0c77c01207c7e7c01237c7e7c036376c752797e0788ce01207f52887e787e4c7888c076cd78c7876376ce82776376d101207f757cce01207f75886775686776cd23aa20c42c11d1b80f1eae4c024fc765dd0c57701ca3a974579f9bbe600079e059b4f58788d100886867767676cdc0c788ccc0c6a269d1c0ce88d3c0d0a269c0c7c38c6576c09c6476c75279879169688c76009f667575687e787e0275517e019f8a",
+        "name": "compiler helper -8",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-9": {
+        "bytecode": "01207c7e7c01207c7e7cc0c701237c7e7b7b04519d76c753797e0788ce01207f52887e52797e4988c076cd78c7876376ce82776376d101207f757cce01207f75886775686776cd23aa20c42c11d1b80f1eae4c024fc765dd0c57701ca3a974579f9bbe600079e059b4f58788d10088687e787e0275517e77019f8a",
+        "name": "compiler helper -9",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-41": {
+        "bytecode": "01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765301948a6866c476636501958a009c666875009d75",
+        "name": "compiler helper -41",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-42": {
+        "bytecode": "c0ce76528a7601888a78517e006b0000c365658c76ce827778c75679879b78919b6676c75579876376c6537a937b7b6876ce5779877b937c76ce76557987917c82779a636c7853807e6b68769166756c826365537f7c817c6b76c7827701239c6376ce82777601209c7c01219c9b6376ce01207f7576577987637576ce827701209c01938a67bc56797c01898a7c76c77b8701938a686868756c8291666875",
+        "name": "compiler helper -42",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-43": {
+        "bytecode": "0000c465658c76d159798778cd5879879b78919b6676cd5779876376cc537a937b7b6876d15979877b937c769166757ba169726d726d",
+        "name": "compiler helper -43",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-19": {
+        "bytecode": "6376cd78c78876d178ce8876d378d0a26976d278cf8876ce76827701219c6301207f775287916967756868",
+        "name": "outlined source span -19",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-20": {
+        "bytecode": "93a56476cd78c78876d278cf8876d178ce8868758b00",
+        "name": "outlined source span -20",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-21": {
+        "bytecode": "8c76d1537987637c8c7c6876",
+        "name": "outlined source span -21",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;;;;;"
+      },
+      "-22": {
+        "bytecode": "c0ce01207f75517e4f",
+        "name": "outlined source span -22",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;"
+      },
+      "-23": {
+        "bytecode": "557a75547a75537a757b7574",
+        "name": "outlined source span -23",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;"
+      },
+      "-24": {
+        "bytecode": "658c76d153798778919b6676d1537987",
+        "name": "outlined source span -24",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;"
+      },
+      "-25": {
+        "bytecode": "758201209d01207c7e",
+        "name": "outlined source span -25",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "57:4:61:5:1;;;;;;"
+      },
+      "-26": {
+        "bytecode": "7776820087",
+        "name": "outlined source span -26",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "60:23:60:40;:8::42:1;;;"
+      },
+      "-27": {
+        "bytecode": "758201209d01207c7e7e53797e",
+        "name": "outlined source span -27",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;"
+      },
+      "-28": {
+        "bytecode": "01aa8a01ab8aa169c0ce01207f75c0c4",
+        "name": "outlined source span -28",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;"
+      },
+      "-29": {
+        "bytecode": "6d7501868ac08bc6c0",
+        "name": "outlined source span -29",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;"
+      },
+      "-30": {
+        "bytecode": "7501828a",
+        "name": "outlined source span -30",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "51:8:51:34:1;;"
+      },
+      "-31": {
+        "bytecode": "7777aa02aa207c7e01877e",
+        "name": "outlined source span -31",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "23::80:1;;;;;;;"
+      },
+      "-32": {
+        "bytecode": "597a8201209d01207c7e7e",
+        "name": "outlined source span -32",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "54:29:54:33;;:8::45:1;;;;;;"
+      },
+      "-33": {
+        "bytecode": "636d01006782518763548a67019e8a6868",
+        "name": "outlined source span -33",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "51:8:51:34:1;;;;;;;;;;;;;;"
+      },
+      "-34": {
+        "bytecode": "6d01848a01a98a019c8a6501988a63568a63765279945354a5696868769166019d8a5b8a6d",
+        "name": "outlined source span -34",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "46:4:55:5:1;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"
+      },
+      "-35": {
+        "bytecode": "c476636501958a009c666875009d75019c8a",
+        "name": "outlined source span -35",
+        "requires": [],
+        "logs": [],
+        "sourceMap": "57:4:61:5:1;;;;;;;;;;;;;;;"
+      }
+    }
+  },
+  "functionBodies": {
+    "af404644": "58798201208875597982012088755a79558a75567a577a007b7b52717c567a53afc08bcf518a588a77518a5a8a7700885579c05293cf518a7c5288517f7c01208801207f77518a7c558a77a06953798201209d01207c7e55798201209d01207c7e57797682008701a18a58797682008701a18a517682008701a18a5a7a7682008701a18a01a08a01a08a1f88008814587262ea448b6247fd1261c2d87742ae4840f11a75029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c7880151c08bcf518a588a019b8a57797e55797ec08bd288c076c77cce528a538a5d8a015256797e54797ec05293d288c076c77cce528a538a5f8a567a7501978a555e8a6b6c6e7cc05393608a01a28a7551",
+    "824cfdfc": "567a547aadc08bcf518a588a77518a5a8a775188007682008701a18ac08bcf518a588a77518a578a77518a7c558a019a8a01a18a1f88008814719c355e1d6caf51ff512d2defde00a0cf8728c275029000b27551c08bce01878ac076c77cce528a538a8bc7880151c08bcf518a588a019b8ac08bcf518a588a77518a578a01998a7ec08bcf518a588a77518a578a77518a7c558a019a8a01a18a7ec08bd288c076c77cce528a538a5d8a7b7574575e8a6b6c6e7cc05293608a6d01848a01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765201948a686601a38a6501988a63568a63765279945253a5696868769166019d8a8bcc88c08bd0c08bd3a1696d6d7551",
+    "7d688155": "c05293cf518a588a77518a5a8a775188547ab275c05293cf518a588a77518a578a01998ac05393cf518a7c5288598ac05293cf518a588a77518a578a77518a7c558a019a8a01a18a007682008701a18ac05293cf518a588a77518a578a77518a7c558a019a8a01a18ac05293cf518a588a77518a578a01998a7e1f88008814e180a2c19eb881b1c83d21fa8fa7d4e4aa923c5b75029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c788c05393ce01878ac076c77cce528a538a5393c788010056797e54797ec08bcf518a5c8a77518a7c558a75518a7c558a019a8a01a18a7ec08bd288c076c77cce528a538a5d8a015155797e53797ec05293cf518a588a77518a578a01998a7ec05293cf518a588a77518a578a77518a7c558a019a8a01a18a7ec05293d288c076c77cce528a538a5f8ac05393cfc05393d288c076c77cce528a538a5393c7788875c05393c7c05393cd88c05393cec05393d18801978a575e8a6b6c6e7cc05493608a6d01848a01968a6bc3658c76ce52798763766b6876009c667500656c76009f6375516776c0765401948a686601a38a6501988a63568a63765279945455a5696868769166019d8a5b8ac05393c6c05393cc88c05393d0c05393d3a1696d6d7551",
+    "a9061006": "c05293cf518a588a77518a5a8a770088c08bcf518a5c8a77518a7c558a77c08bcf518a5c8a77518a7c558a75518a7c558a77a069557ab275c08bcf518a5c8a77518a7c558a019a8a01a18ac08bcf518a5c8a77518a7c558a019a8a01a18a1f88008814b4d9e5d96dfb9b09abf95513616531c763c98c7975029000b27551c08bce01878ac076c77cce528a538a8bc788c05293ce01878ac076c77cce528a538a5293c7880100c08bcf518a7c0088598a7ec08bcf518a5c8a77518a7c558a019a8a01a18a7e53797ec08bd288c076c77cce528a538a5d8ac05293cfc05293d288c076c77cce528a538a5f8a7b7574575e8a6b6c6e7cc05393608a01a28a6d7551"
+  },
+  "fingerprint": "0500b62d13dae9c5b59ca13dd7b2a12d1a6253a84197f26162f949c46fee3465",
+  "stateLayout": {
+    "variables": [
+      {
+        "name": "activeRoot",
+        "type": "bytes32",
+        "nftIndex": 0,
+        "fieldIndex": 0
+      },
+      {
+        "name": "activeEpoch",
+        "type": "int256",
+        "nftIndex": 0,
+        "fieldIndex": 1
+      },
+      {
+        "name": "pushEpoch",
+        "type": "int256",
+        "nftIndex": 0,
+        "fieldIndex": 2
+      },
+      {
+        "name": "activeSnapshot",
+        "type": "bytes32",
+        "nftIndex": 1,
+        "fieldIndex": 0
+      },
+      {
+        "name": "status",
+        "type": "bigint",
+        "nftIndex": 1,
+        "fieldIndex": 1
+      },
+      {
+        "name": "pendingRoot",
+        "type": "bytes32",
+        "nftIndex": 1,
+        "fieldIndex": 2
+      },
+      {
+        "name": "pendingEpoch",
+        "type": "int256",
+        "nftIndex": 1,
+        "fieldIndex": 3
+      },
+      {
+        "name": "pendingSnapshot",
+        "type": "bytes32",
+        "nftIndex": 2,
+        "fieldIndex": 0
+      },
+      {
+        "name": "highEpoch",
+        "type": "int256",
+        "nftIndex": 2,
+        "fieldIndex": 1
+      }
+    ],
+    "dataNftCount": 3,
+    "commitmentLimit": 128
+  },
+  "events": [
+    {
+      "name": "Proposed",
+      "signature": "Proposed(int256,bytes32,bytes32)",
+      "parameters": [
+        {
+          "name": "epoch",
+          "type": "int256",
+          "indexed": true
+        },
+        {
+          "name": "root",
+          "type": "bytes32"
+        },
+        {
+          "name": "snapshot",
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "name": "Activated",
+      "signature": "Activated(int256,bytes32)",
+      "parameters": [
+        {
+          "name": "epoch",
+          "type": "int256",
+          "indexed": true
+        },
+        {
+          "name": "root",
+          "type": "bytes32"
+        }
+      ]
+    },
+    {
+      "name": "Cancelled",
+      "signature": "Cancelled(int256)",
+      "parameters": [
+        {
+          "name": "epoch",
+          "type": "int256",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "name": "PushOpened",
+      "signature": "PushOpened(int256)",
+      "parameters": [
+        {
+          "name": "epoch",
+          "type": "int256",
+          "indexed": true
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "name": "NotPending",
+      "signature": "NotPending()",
+      "parameters": []
+    },
+    {
+      "name": "AuditWindowOpen",
+      "signature": "AuditWindowOpen(int256)",
+      "parameters": [
+        {
+          "name": "needed",
+          "type": "int256"
+        }
+      ]
+    },
+    {
+      "name": "EpochNotIncreasing",
+      "signature": "EpochNotIncreasing(int256,int256)",
+      "parameters": [
+        {
+          "name": "epoch",
+          "type": "int256"
+        },
+        {
+          "name": "floor",
+          "type": "int256"
+        }
+      ]
+    },
+    {
+      "name": "AlreadyPending",
+      "signature": "AlreadyPending(int256)",
+      "parameters": [
+        {
+          "name": "epoch",
+          "type": "int256"
+        }
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "Status",
+      "members": [
+        {
+          "name": "Idle",
+          "value": "0"
+        },
+        {
+          "name": "Pending",
+          "value": "1"
+        }
+      ]
+    }
+  ],
+  "compiler": {
+    "name": "solidc",
+    "version": "0.50.0",
+    "options": {
+      "enforceFunctionParameterTypes": true,
+      "enforceLocktimeGuard": true,
+      "enforceFinalRequire": true,
+      "allowUnsafeOperations": false,
+      "commitmentLimit": 128,
+      "messageBus": false
+    }
+  },
+  "updatedAt": "2026-11-21T12:48:17.987Z",
+  "invocationAnalysis": {
+    "version": 1,
+    "protocolVersions": [
+      1
+    ],
+    "functions": [
+      {
+        "id": 0,
+        "name": "proposeRoot",
+        "arity": 5,
+        "entryPoint": true,
+        "selector": "af404644",
+        "calls": [],
+        "closure": [
+          0
+        ],
+        "component": 0,
+        "recursive": false,
+        "reads": [
+          "state:highEpoch",
+          "state:pendingEpoch",
+          "state:status"
+        ],
+        "writes": [
+          "state:highEpoch",
+          "state:pendingEpoch",
+          "state:pendingRoot",
+          "state:pendingSnapshot",
+          "state:status"
+        ],
+        "effects": [
+          "events"
+        ],
+        "unknown": false,
+        "bounded": true,
+        "maximumDirectInvocations": 0,
+        "emits": [
+          {
+            "eventName": "Proposed",
+            "eventSignature": "Proposed(int256,bytes32,bytes32)",
+            "emitIndex": 0
+          }
+        ],
+        "blockLayout": {
+          "blockSize": 4,
+          "slots": [
+            {
+              "kind": "master",
+              "offset": 0
+            },
+            {
+              "kind": "dataNft",
+              "offset": 1,
+              "nftIndex": 1
+            },
+            {
+              "kind": "dataNft",
+              "offset": 2,
+              "nftIndex": 2
+            },
+            {
+              "kind": "event",
+              "offset": 3,
+              "slotIndex": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "name": "cancelPending",
+        "arity": 1,
+        "entryPoint": true,
+        "selector": "824cfdfc",
+        "calls": [],
+        "closure": [
+          1
+        ],
+        "component": 1,
+        "recursive": false,
+        "reads": [
+          "state:pendingEpoch",
+          "state:status"
+        ],
+        "writes": [
+          "state:status"
+        ],
+        "effects": [
+          "events"
+        ],
+        "unknown": false,
+        "bounded": true,
+        "maximumDirectInvocations": 0,
+        "emits": [
+          {
+            "eventName": "Cancelled",
+            "eventSignature": "Cancelled(int256)",
+            "emitIndex": 0
+          }
+        ],
+        "blockLayout": {
+          "blockSize": 3,
+          "slots": [
+            {
+              "kind": "master",
+              "offset": 0
+            },
+            {
+              "kind": "dataNft",
+              "offset": 1,
+              "nftIndex": 1
+            },
+            {
+              "kind": "event",
+              "offset": 2,
+              "slotIndex": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "name": "activateRoot",
+        "arity": 0,
+        "entryPoint": true,
+        "selector": "7d688155",
+        "calls": [],
+        "closure": [
+          2
+        ],
+        "component": 2,
+        "recursive": false,
+        "reads": [
+          "state:pendingEpoch",
+          "state:pendingRoot",
+          "state:pendingSnapshot",
+          "state:status"
+        ],
+        "writes": [
+          "state:activeEpoch",
+          "state:activeRoot",
+          "state:activeSnapshot",
+          "state:status"
+        ],
+        "effects": [
+          "events"
+        ],
+        "unknown": false,
+        "bounded": true,
+        "maximumDirectInvocations": 0,
+        "emits": [
+          {
+            "eventName": "Activated",
+            "eventSignature": "Activated(int256,bytes32)",
+            "emitIndex": 0
+          }
+        ],
+        "blockLayout": {
+          "blockSize": 5,
+          "slots": [
+            {
+              "kind": "master",
+              "offset": 0
+            },
+            {
+              "kind": "dataNft",
+              "offset": 1,
+              "nftIndex": 0
+            },
+            {
+              "kind": "dataNft",
+              "offset": 2,
+              "nftIndex": 1
+            },
+            {
+              "kind": "dataNft",
+              "offset": 3,
+              "nftIndex": 2
+            },
+            {
+              "kind": "event",
+              "offset": 4,
+              "slotIndex": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "name": "openPush",
+        "arity": 0,
+        "entryPoint": true,
+        "selector": "a9061006",
+        "calls": [],
+        "closure": [
+          3
+        ],
+        "component": 3,
+        "recursive": false,
+        "reads": [
+          "state:activeEpoch",
+          "state:pushEpoch",
+          "state:status"
+        ],
+        "writes": [
+          "state:pushEpoch"
+        ],
+        "effects": [
+          "events"
+        ],
+        "unknown": false,
+        "bounded": true,
+        "maximumDirectInvocations": 0,
+        "emits": [
+          {
+            "eventName": "PushOpened",
+            "eventSignature": "PushOpened(int256)",
+            "emitIndex": 0
+          }
+        ],
+        "blockLayout": {
+          "blockSize": 4,
+          "slots": [
+            {
+              "kind": "master",
+              "offset": 0
+            },
+            {
+              "kind": "dataNft",
+              "offset": 1,
+              "nftIndex": 0
+            },
+            {
+              "kind": "dataNft",
+              "offset": 2,
+              "nftIndex": 1
+            },
+            {
+              "kind": "event",
+              "offset": 3,
+              "slotIndex": 0
+            }
+          ]
+        }
+      }
+    ],
+    "components": [
+      {
+        "id": 0,
+        "functions": [
+          0
+        ],
+        "recursive": false
+      },
+      {
+        "id": 1,
+        "functions": [
+          1
+        ],
+        "recursive": false
+      },
+      {
+        "id": 2,
+        "functions": [
+          2
+        ],
+        "recursive": false
+      },
+      {
+        "id": 3,
+        "functions": [
+          3
+        ],
+        "recursive": false
+      }
+    ]
+  }
+}
