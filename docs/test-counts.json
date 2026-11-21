@@ -1,16 +1,16 @@
 {
-  "total": 48,
-  "passed": 48,
+  "total": 49,
+  "passed": 49,
   "files": [
     {
       "file": "test/registry.test.ts",
-      "tests": 12,
-      "covers": "2-of-3 proposals, Schnorr refusal, pending/epoch rules, audit window, guardian veto, push window"
+      "tests": 13,
+      "covers": "2-of-3 proposals, Schnorr refusal, pending/epoch rules, audit window, events, guardian veto, push window"
     },
     {
       "file": "test/pool.test.ts",
       "tests": 15,
-      "covers": "method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, operator push gates"
+      "covers": "method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, events, operator push gates"
     },
     {
       "file": "test/merkle.test.ts",

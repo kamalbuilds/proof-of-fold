@@ -95,6 +95,23 @@ describe('RootRegistry: audit window', () => {
   });
 });
 
+describe('RootRegistry: events', () => {
+  it('publishes Proposed and Activated as readable event records carrying epoch, root and snapshot hash', async () => {
+    const c = await setup();
+    await c.propose(c.op1, c.op3);
+    const proposed = await c.registry.queryEvents('Proposed');
+    expect(proposed).toHaveLength(1);
+    expect(proposed[0].values.epoch).toBe(1n);
+    expect(Buffer.from(proposed[0].values.root).toString('hex')).toBe(Buffer.from(rootA).toString('hex'));
+    expect(Buffer.from(proposed[0].values.snapshot).toString('hex')).toBe(Buffer.from(snapA).toString('hex'));
+    await mine(ROOT_DELAY + 2);
+    await c.activate();
+    const activated = await c.registry.queryEvents('Activated');
+    expect(activated).toHaveLength(1);
+    expect(activated[0].values.epoch).toBe(1n);
+  });
+});
+
 describe('RootRegistry: guardian veto', () => {
   it('the guardian cancels a pending root, the root never activates, and its epoch is burned', async () => {
     const c = await setup();

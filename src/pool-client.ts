@@ -16,6 +16,8 @@ export type Deployment = {
   pusher: string;
   registry: { categoryId: string; address: string; deployTxid: string };
   pool: { categoryId: string; address: string; deployTxid: string; fundTxid?: string };
+  /** demo claimers (indices of demoKey) whose address holds a fee float on this network */
+  fundedBurners?: { sats: string; indices: number[] };
 };
 export type EpochFile = {
   epoch: number; root: string; depth: number; snapshotSha256: string; url: string; params: unknown;

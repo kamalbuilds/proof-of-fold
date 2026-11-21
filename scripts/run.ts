@@ -189,10 +189,14 @@ switch (step) {
     break;
   }
   case 'burners': {
-    const [count, sats] = args;
-    const outs = Array.from({ length: Number(count) }, (_, i) => ({ lock: p2pkhLock(hash160(publicKey(demoKey(net, i)))), sats: BigInt(sats) }));
-    const r = await sendSats('DESK', outs);
-    await logAndWait('fund-burners', r.txid, { count: Number(count), sats });
+    // burners <count> <sats each> [first index] [FROM_ROLE]: fee float for demo claimers first..first+count-1
+    const [count, sats, first = '0', from = 'DESK'] = args;
+    const idx = Array.from({ length: Number(count) }, (_, i) => Number(first) + i);
+    const outs = idx.map((i) => ({ lock: p2pkhLock(hash160(publicKey(demoKey(net, i)))), sats: BigInt(sats) }));
+    const r = await sendSats(from, outs);
+    await logAndWait('fund-burners', r.txid, { first: Number(first), count: Number(count), sats });
+    const d = dep();
+    writeJson('deployment.json', { ...d, fundedBurners: { sats, indices: [...new Set([...((d as any).fundedBurners?.indices ?? []), ...idx])].sort((a, b) => a - b) } });
     break;
   }
   case 'claim-demo':
