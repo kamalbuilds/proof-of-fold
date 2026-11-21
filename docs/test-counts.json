@@ -1,0 +1,31 @@
+{
+  "total": 48,
+  "passed": 48,
+  "files": [
+    {
+      "file": "test/registry.test.ts",
+      "tests": 12,
+      "covers": "2-of-3 proposals, Schnorr refusal, pending/epoch rules, audit window, guardian veto, push window"
+    },
+    {
+      "file": "test/pool.test.ts",
+      "tests": 15,
+      "covers": "method 0 and method 1 claims, 10 forged-claim shapes, key theft, replay, cumulative epochs, pending root, foreign token, operator push gates"
+    },
+    {
+      "file": "test/merkle.test.ts",
+      "tests": 7,
+      "covers": "tree, proofs, tamper, duplicates, little endian amount encoding"
+    },
+    {
+      "file": "test/snapshot.test.ts",
+      "tests": 6,
+      "covers": "GetDistro parsing, exact decimal amounts, legacy address to hash160, root reproducible from the stored response"
+    },
+    {
+      "file": "test/depth.test.ts",
+      "tests": 8,
+      "covers": "real claims at proof depth 1 to 24 under production limits"
+    }
+  ]
+}

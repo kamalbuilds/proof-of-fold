@@ -9,7 +9,9 @@ export function loadEnv(): Record<string, string> {
   if (!existsSync(f)) throw new Error('.env missing: run scripts/gen-keys.ts');
   return Object.fromEntries(readFileSync(f, 'utf8').split('\n').filter(Boolean).map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]));
 }
-export const provider = (net: Net) => new ElectrumNetworkProvider(net);
+// chipnet.bch.ninja (the SDK default) keeps a stale mempool of unmined 1 sat/byte transactions; chipnet.imaginary.cash does not.
+export const SERVERS: Record<Net, string | undefined> = { chipnet: 'chipnet.imaginary.cash', mainnet: undefined };
+export const provider = (net: Net) => (SERVERS[net] ? new ElectrumNetworkProvider(net, { hostname: SERVERS[net] } as any) : new ElectrumNetworkProvider(net));
 export function key(net: Net, role: string): Uint8Array {
   const v = loadEnv()[`${net.toUpperCase()}_${role}_KEY`];
   if (!v) throw new Error(`no ${net} ${role} key in .env`);

@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { provider as providerOf } from '../src/chain.ts';
+const net = process.argv[2];
+const d = JSON.parse(readFileSync(new URL(`../deployments/${net}/deployment.json`, import.meta.url), 'utf8'));
+const p: any = providerOf(net as any);
+const tip = await p.getBlockHeight();
+console.log('tip', tip);
+const us = await p.getUtxos(d.registry.address);
+for (const u of us) console.log(u.txid.slice(0, 10), u.vout, String(u.satoshis), u.token?.nft?.capability, String(u.token?.nft?.commitment).slice(0, 12), 'height', u.height ?? 'n/a');
+process.exit(0);
