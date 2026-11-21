@@ -40,7 +40,7 @@ export async function setup(opts: { fillers?: number } = {}) {
   const { contract: deployed } = await StatefulContract.deploy(poolArtifact, [hexToBin(ASSET), registryData, op1.publicKey], {
     provider, fundingUtxo: genesis, funder: op1.unlockP2PKH(), changeAddress: op1.getAddress(),
   } as any) as any;
-  const pool: any = StatefulContract.withCategory(deployed.inner, deployed.categoryId, {
+  const attachPool = (): any => StatefulContract.withCategory(deployed.inner, deployed.categoryId, {
     externalContracts: {
       IRootRegistry: {
         artifact: registry.inner.artifact,
@@ -49,6 +49,7 @@ export async function setup(opts: { fillers?: number } = {}) {
       },
     },
   } as any);
+  const pool: any = attachPool();
 
   await pool.connect(op1).call.fund(hexToBin(ASSET)).tokenContainerDeposit(ASSET, POOL_TOKENS).addInput(tokenCoin, op1.unlockP2PKH()).send();
 
@@ -63,9 +64,10 @@ export async function setup(opts: { fillers?: number } = {}) {
     { method: 0, identity: bob.getLockingBytecode(), cumulative: 12_345n },
     { method: 1, identity: legacy[0].pkh, cumulative: 70_000n },
     { method: 1, identity: legacy[1].pkh, cumulative: 9_999n },
+    { method: 0, identity: syntheticLock(9999), cumulative: 999n },   // below the push minimum
   ];
   for (let i = 0; i < (opts.fillers ?? 12); i++) entries.push({ method: 0, identity: syntheticLock(i), cumulative: BigInt(1000 + i) });
-  return { op1, op2, op3, guardian, alice, bob, mallory, dest, provider, registry, pool, legacy, entries };
+  return { op1, op2, op3, guardian, alice, bob, mallory, dest, provider, registry, pool, attachPool, legacy, entries };
 }
 export type Ctx = Awaited<ReturnType<typeof setup>>;
 
@@ -116,4 +118,4 @@ export const claimKey = (c: Ctx, by: any, tree: MerkleTree, index: number, key: 
     o.proof ?? tree.proof(index).proofBytes, o.index ?? BigInt(index),
   ).send();
 };
-export { MerkleTree, hexToBin, binToHex, mine, p2pkhLock };
+export { MerkleTree, hexToBin, binToHex, mine, p2pkhLock, leafKey, withRelativeLock };

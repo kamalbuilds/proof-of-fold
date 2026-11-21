@@ -37,6 +37,7 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
 
     bytes32 root;
     int epoch;
+    int pushEpoch;      // the registry's push-window epoch as of the last sync
 
     mapping(bytes32 => bigint) public claimed;
 
@@ -46,12 +47,15 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
         require(this.tokens[category].tokenAmount >= 0, "no container");
     }
 
-    // Copy the registry's ACTIVE root. The pending one is still in its audit window and is never read.
+    // Copy the registry's ACTIVE root and push-window epoch. The pending root is still in its audit window and is
+    // never read. Anyone may call this; it fails unless the registry has something new.
     function syncRoot() {
         int active = IRootRegistry(registry).activeEpoch;
-        require(active > this.epoch, "already in sync");
+        int pushed = IRootRegistry(registry).pushEpoch;
+        require(active > this.epoch || pushed > this.pushEpoch, "already in sync");
         this.root = IRootRegistry(registry).activeRoot;
         this.epoch = active;
+        this.pushEpoch = pushed;
     }
 
     function walk(bytes32 leaf, bytes proof, int index) internal view returns (bytes32) {
@@ -110,14 +114,14 @@ contract FoldClaimPool(bytes32 rewardCategory, address registry, pubkey pusher) 
     function push(sig s, bytes32 category, bytes method, bytes identity, bytes32 leafKey, bigint cumulative, bytes proof, int index) {
         require(category == rewardCategory, WrongToken());
         require(checkSig(s, pusher));
-        require(IRootRegistry(registry).pushEpoch == this.epoch, "push window not open for this epoch");
+        require(this.pushEpoch == this.epoch, "push window not open for this epoch");
         bigint owed = settle(method, identity, leafKey, cumulative, proof, index);
         require(owed >= MIN_PUSH, "below the push minimum");
-        if (method == 0x00) {
-            this.tokens[category].transfer(identity, owed);
-        } else {
-            this.tokens[category].transfer(new LockingBytecodeP2PKH(bytes20(identity)), owed);
+        bytes destination = identity;
+        if (method == 0x01) {
+            destination = new LockingBytecodeP2PKH(bytes20(identity));
         }
+        this.tokens[category].transfer(destination, owed);
         emit Pushed(leafKey, owed, cumulative);
     }
 }
