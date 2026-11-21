@@ -9,6 +9,7 @@ const epoch = J(`${dir}/epoch-1.json`);
 const txs: any[] = read(`${dir}/txs.jsonl`).trim().split('\n').map((l) => JSON.parse(l));
 const find = (what: string) => txs.filter((t) => t.what === what);
 const first = (what: string) => find(what)[0]?.txid;
+const at = (what: string, i: number) => find(what)[i]?.txid;
 const explorer = net === 'mainnet' ? 'https://blockchair.com/bitcoin-cash/transaction/' : 'https://chipnet.imaginary.cash/tx/';
 const link = (txid?: string) => (txid ? `[\`${txid}\`](${explorer}${txid})` : 'pending');
 const reg = read('contracts/RootRegistry.scash').split('\n');
@@ -21,7 +22,12 @@ const d8 = depth.find((x: any) => x.depth === 8).claimTxBytes;
 const counts = J('docs/test-counts.json');
 const mut = J('docs/MUTATIONS.json');
 const sym = net === 'mainnet' ? 'FLDCH' : 'tFLDCH';
-const claims = [...find('claim-demo'), ...find('claim-demo-again')];
+const facts = existsSync(new URL('../' + dir + '/tx-facts.json', import.meta.url)) ? J(dir + '/tx-facts.json').facts : [];
+const fact = (txid?: string) => facts.find((f: any) => f.txid === txid);
+const claimFact = fact(at('claim-demo', 0));
+const proposeFact = fact(at('propose-root', 0));
+const activateFact = fact(at('activate-root', 0));
+const syncFact = fact(at('sync-root', 0));
 
 const out = `# FoldClaim
 
@@ -42,14 +48,22 @@ FoldClaim builds its payout leaves from the live sponsor API (\`api.folding.cash
 
 | Step | Transaction |
 |---|---|
-| Registry genesis | ${link(first('deploy-registry'))} |
-| Pool genesis | ${link(first('deploy-pool'))} |
-| Pool funded | ${link(first('fund-pool'))} |
-| Root proposed (2 of 3 operators) | ${link(first('propose-root'))} |
-| Root activated after the audit window | ${link(first('activate-root'))} |
-| Pool synced to the active root | ${link(first('sync-root'))} |
-| Demo claims | ${claims.length ? claims.map((c) => link(c.txid)).join(', ') : 'see the page'} |
-| Operator push | ${link(first('push'))} |
+| Registry genesis | ${link(at('deploy-registry', 0))} |
+| Pool genesis | ${link(at('deploy-pool', 0))} |
+| Pool funded | ${link(at('fund-pool', 0))} |
+| Epoch 1 proposed by two operators | ${link(at('propose-root', 0))} |
+| Epoch 1 activated after the audit window | ${link(at('activate-root', 0))} |
+| Pool synced to epoch 1 | ${link(at('sync-root', 0))} |
+| Claim from the command line, demo claimer 149 | ${link(at('claim-demo', 0))} |
+| Claim from the browser, demo claimer 0 | ${link(at('claim-browser', 0))} |
+| Epoch 2 proposed | ${link(at('propose-root', 1))} |
+| Epoch 2 cancelled by the guardian | ${link(at('cancel-pending', 0))} |
+| Epoch 3 proposed | ${link(at('propose-root', 2))} |
+| Epoch 3 activated | ${link(at('activate-root', 1))} |
+| Pool synced to epoch 3 | ${link(at('sync-root', 1))} |
+| Epoch 3 claim, only the difference | ${link(at('claim-demo-delta', 0))} |
+| Registry opens the push window | ${link(at('open-push', 0))} |
+| Operator push | ${link(at('push', 0))} |
 
 Every transaction can be read back with \`npx tsx scripts/tx.ts ${net} <txid>\`.
 
@@ -82,7 +96,7 @@ After the registry has held an active root idle for \`pushDelay\` (\`${R(/functi
 
 ## Cost
 
-Measured claim size under production limits, by proof depth (real accepted claims, \`docs/depth-analysis.json\`): ${depth.map((x: any) => `depth ${x.depth} ${x.claimTxBytes.toLocaleString('en-US')} B`).join(', ')}. A 256 leaf tree claims in ${d8.toLocaleString('en-US')} bytes. The folder pays that fee when they claim; the operator's cost per epoch is one proposal (about 4.7 kB), one activation and one sync, whatever the number of folders. Pushing one payment per folder costs the operator at least 148 + 34 bytes per folder per epoch plus dust, so pull is cheaper for the operator from 26 folders upward. The page prints the figures read from the transactions above.
+Measured claim size under production limits, by proof depth (real accepted claims, \`docs/depth-analysis.json\`): ${depth.map((x: any) => `depth ${x.depth} ${x.claimTxBytes.toLocaleString('en-US')} B`).join(', ')}. A 256 leaf tree claims in ${d8.toLocaleString('en-US')} bytes. The folder pays that fee when they claim; the operator's cost per epoch is one proposal (about 4.7 kB), one activation and one sync, whatever the number of folders. Pushing one payment per folder costs the operator at least 148 + 34 bytes per folder per epoch plus dust, so pull is cheaper for the operator from 26 folders upward. Measured on ${net}: a claim is ${claimFact?.bytes?.toLocaleString('en-US')} bytes and paid ${claimFact?.fee?.toLocaleString('en-US')} sats at ${claimFact?.satPerByte} sat/byte; a proposal is ${proposeFact?.bytes?.toLocaleString('en-US')} bytes (${proposeFact?.fee?.toLocaleString('en-US')} sats), an activation ${activateFact?.bytes?.toLocaleString('en-US')} bytes, a sync ${syncFact?.bytes?.toLocaleString('en-US')} bytes. The page prints the figures read from the transactions above.
 
 ## SolidCash features
 
