@@ -25,6 +25,14 @@ Demo: https://samizdatproject.github.io/foldclaim/ . Repo: github.com/samizdatpr
 - Leaf format records a method byte, so the open question "leaf contents / link method" is answered on chain.
 - Cumulative-only roots: a user pays out the difference, skips epochs freely.
 
+## Live evidence
+
+Chipnet deployment with the full lifecycle read back from the chain (README table, TESTS.md, deployments/chipnet/): registry and pool genesis, pool funded, epoch 1 proposed by two operators and activated after the audit window, epoch 2 cancelled by the guardian, epoch 3 and 4 activated, claims from the command line and from the browser, the second claim refused by the covenant (NothingToClaim) and by the node (transaction already in block chain), a claim that pays only the difference between epochs, operator push after the push window. The early activation attempt is refused by the node with non-BIP68-final until the window has passed.
+
+## Windows
+
+The production profile is 144 blocks for the audit window and 4032 for the push window. Both are constructor arguments of the registry; the live deployments use a shorter profile (6 and 12) so the whole cycle runs inside a day. The values are shown on the page and verifiable on chain.
+
 ## Host asset
 
 FLDCH, category `0adb865ee9cc3038de87fba682e6cd361414edc9acff0da2fd0690d75341c640` (mainnet). Chipnet rehearsal runs the identical flow with a chipnet fungible token genesis. See FUNDING.md.

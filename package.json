@@ -6,6 +6,11 @@
   "description": "FoldingCash pull-based reward claims in SolidCash",
   "license": "MIT",
   "scripts": {
+    "test": "solidhat test",
+    "solidhat:compile": "solidhat compile",
+    "solidhat:test": "solidhat test",
+    "mutate": "tsx scripts/mutate.ts",
+    "gen:docs": "tsx scripts/gen-tests-md.ts && tsx scripts/gen-readme.ts",
     "web:data": "tsx scripts/publish-web-data.ts",
     "web:dev": "vite --config web/vite.config.ts",
     "web:build": "tsx scripts/publish-web-data.ts && vite build --config web/vite.config.ts",
