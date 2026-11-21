@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { signer as signerOf, provider as providerOf } from '../src/chain.ts';
-import { attach, type Deployment } from '../src/pool-client.ts';
-import { withRelativeLock } from '../src/relative-lock.ts';
-import { setFeeRate } from '../src/fee-rate.ts';
+import { signer as signerOf, provider as providerOf } from '../../src/chain.ts';
+import { attach, type Deployment } from '../../src/pool-client.ts';
+import { withRelativeLock } from '../../src/relative-lock.ts';
+import { setFeeRate } from '../../src/fee-rate.ts';
 setFeeRate(2);
 const net = 'chipnet';
-const d: Deployment = JSON.parse(readFileSync(new URL('../deployments/chipnet/deployment.json', import.meta.url), 'utf8'));
+const d: Deployment = JSON.parse(readFileSync(new URL('../../../deployments/chipnet/deployment.json', import.meta.url), 'utf8'));
 const p = providerOf(net);
 const { registry } = attach(d, p);
 const s = signerOf(net, 'DEPLOYER', p);

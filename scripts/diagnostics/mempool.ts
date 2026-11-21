@@ -1,4 +1,4 @@
-import { provider } from '../src/chain.ts';
+import { provider } from '../../src/chain.ts';
 const net = process.argv[2] ?? 'chipnet';
 const p: any = (await import('@solidcash/solidcash/network/electrum')).ElectrumNetworkProvider ? new (await import('@solidcash/solidcash/network/electrum')).ElectrumNetworkProvider(net as any) : provider(net as any);
 const tip = await p.getBlockHeight();

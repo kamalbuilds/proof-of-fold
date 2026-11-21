@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { provider as providerOf } from '../src/chain.ts';
+import { provider as providerOf } from '../../src/chain.ts';
 const net = process.argv[2];
-const d = JSON.parse(readFileSync(new URL(`../deployments/${net}/deployment.json`, import.meta.url), 'utf8'));
+const d = JSON.parse(readFileSync(new URL(`../../deployments/${net}/deployment.json`, import.meta.url), 'utf8'));
 const p: any = providerOf(net as any);
 const tip = await p.getBlockHeight();
 console.log('tip', tip);

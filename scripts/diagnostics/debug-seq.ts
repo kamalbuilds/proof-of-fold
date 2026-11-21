@@ -1,6 +1,6 @@
 import { TransactionBuilder } from '@solidcash/solidcash';
-import { signer as signerOf, provider as providerOf } from '../src/chain.ts';
-import { p2pkhLock } from '../src/identity.ts';
+import { signer as signerOf, provider as providerOf } from '../../src/chain.ts';
+import { p2pkhLock } from '../../src/identity.ts';
 const p: any = providerOf('chipnet'); const s = signerOf('chipnet', 'DEPLOYER', p);
 const tip = await p.getBlockHeight();
 const us = (await s.getUtxos()).filter((x: any) => !x.token && x.blockHeight > 0).sort((a: any, b: any) => a.blockHeight - b.blockHeight);

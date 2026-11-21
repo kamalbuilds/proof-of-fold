@@ -1,4 +1,4 @@
-import { provider as providerOf } from '../src/chain.ts';
+import { provider as providerOf } from '../../src/chain.ts';
 const p: any = providerOf('chipnet');
 const tip = await p.getBlockHeight();
 const ts = async (h: number) => { const hdr: string = await p.performRequest('blockchain.block.header', h); return parseInt(hdr.slice(136, 144).match(/../g)!.reverse().join(''), 16); };

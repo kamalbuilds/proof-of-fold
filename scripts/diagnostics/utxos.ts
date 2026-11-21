@@ -1,4 +1,4 @@
-import { signer, provider } from '../src/chain.ts';
+import { signer, provider } from '../../src/chain.ts';
 const [net, role] = process.argv.slice(2);
 const p: any = provider(net as any);
 const s = signer(net as any, role, p);
