@@ -39,7 +39,7 @@ FLDCH, category `0adb865ee9cc3038de87fba682e6cd361414edc9acff0da2fd0690d75341c64
 
 ## File paths
 
-- Contracts: `contracts/RootRegistry.scash`, `contracts/Proof of FoldPool.scash`
+- Contracts: `contracts/RootRegistry.scash`, `contracts/FoldClaimPool.scash`
 - Merkle library and leaf format: `src/merkle.ts`, `src/identity.ts`
 - Tests (solidhat): `test/registry.test.ts`, `test/pool.test.ts`, `test/merkle.test.ts`
 - Mutation proofs: `TESTS.md`

@@ -68,7 +68,7 @@ export function renderAuthority(c: Ctx) {
 export async function renderFooter(c: Ctx) {
   const ef = await loadEpoch(c, c.epochs[c.epochs.length - 1]);
   $('foot').innerHTML = `
-    <div><h3>Contracts</h3><ul><li>contracts/RootRegistry.scash</li><li>contracts/Proof of FoldPool.scash</li></ul>
+    <div><h3>Contracts</h3><ul><li>contracts/RootRegistry.scash</li><li>contracts/FoldClaimPool.scash</li></ul>
       <h3 style="margin-top:16px">Tests</h3><ul><li>test/registry.test.ts</li><li>test/pool.test.ts</li><li>test/merkle.test.ts</li><li>test/snapshot.test.ts</li><li>test/depth.test.ts</li></ul></div>
     <div><h3>Sponsor API</h3><ul><li><a href="${SPONSOR_API}" target="_blank" rel="noopener">${SPONSOR_API}</a></li><li>pinned: ${esc(ef.url)}</li></ul>
       <h3 style="margin-top:16px">Token category (${NETS[c.net].symbol})</h3><ul><li>${c.d.tokenCategory}</li></ul>
