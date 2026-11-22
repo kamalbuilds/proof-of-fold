@@ -30,11 +30,15 @@ const proposeFact = fact(at('propose-root', 0));
 const activateFact = fact(at('activate-root', 0));
 const syncFact = fact(at('sync-root', 0));
 
-const out = `# FoldClaim
+const out = `# Proof of Fold
+
+![Proof of Fold: system map](submission/architecture.png)
+
+![One claim, start to finish](submission/flow.png)
 
 Pull-based FoldingCash rewards, written in SolidCash. A folder claims their own ${sym} with a Merkle proof and the key behind their existing address. The operator publishes one root per epoch instead of one payment per folder.
 
-FoldClaim builds its payout leaves from the live sponsor API (\`api.folding.cash/v1/GetDistro\`), pins the SHA-256 of the raw response next to the root on chain, and lets anyone re-fetch the URL, rebuild the tree and compare. The 56 rows of the pinned window are all legacy \`1...\` addresses; FoldClaim pays them without any address-linking database, because the folder's key signs the claim.
+Proof of Fold builds its payout leaves from the live sponsor API (\`api.folding.cash/v1/GetDistro\`), pins the SHA-256 of the raw response next to the root on chain, and lets anyone re-fetch the URL, rebuild the tree and compare. The 56 rows of the pinned window are all legacy \`1...\` addresses; Proof of Fold pays them without any address-linking database, because the folder's key signs the claim.
 
 ## Live on ${net}
 

@@ -1,5 +1,9 @@
 # Proof of Fold
 
+![Proof of Fold: system map](submission/architecture.png)
+
+![One claim, start to finish](submission/flow.png)
+
 Pull-based FoldingCash rewards, written in SolidCash. A folder claims their own tFLDCH with a Merkle proof and the key behind their existing address. The operator publishes one root per epoch instead of one payment per folder.
 
 Proof of Fold builds its payout leaves from the live sponsor API (`api.folding.cash/v1/GetDistro`), pins the SHA-256 of the raw response next to the root on chain, and lets anyone re-fetch the URL, rebuild the tree and compare. The 56 rows of the pinned window are all legacy `1...` addresses; Proof of Fold pays them without any address-linking database, because the folder's key signs the claim.
@@ -10,7 +14,7 @@ Proof of Fold builds its payout leaves from the live sponsor API (`api.folding.c
 |---|---|
 | Token | `a1072ff78525d5e612e64905dc320533308397518fb3226692d36745e7ab3471` (tFLDCH, 8 decimals) |
 | RootRegistry | `bchtest:pdxa23mu3k5tpwd6228ajg7zuhsswq27u5ntwdh59cfs8kgx7ytkc45fuvxwz` , category `f3d1b771511b07efa982513fa65f3dd02465c81a4f4b3d9f9fba01f4e001d56b` |
-| Proof of FoldPool | `bchtest:pdx85dqzxjlqjg47se7grq7lmtpanfzfuwpehfc5akpsuys9uelju4ttx8vxv` , category `fab5154f9ab557ab05ae183e479c56124033e57f6b8af244bfc019673b676fda` |
+| FoldClaimPool | `bchtest:pdx85dqzxjlqjg47se7grq7lmtpanfzfuwpehfc5akpsuys9uelju4ttx8vxv` , category `fab5154f9ab557ab05ae183e479c56124033e57f6b8af244bfc019673b676fda` |
 | Windows | audit 6 and push 12 (constructor arguments; the contract measures them with the chain's relative timelock) |
 | Epoch 1 root | `a890b9cc68b773c429b13654bcc39771d017eac75a1ac22d17b6f9420eb697f8` over 206 leaves, depth 8 |
 | Snapshot | `https://api.folding.cash/v1/GetDistro?startDate=11-01-2026&endDate=11-20-2026&amount=1000000`, SHA-256 `d13b3ec2f81cd10e1ccf9308966821f9b72cf108cc1271765f514364d47fb4ab` |
@@ -59,11 +63,11 @@ The receipt is a SolidCash verified mapping `claimed[sha256(method | identity)]`
 - The proposal waits `rootDelay` of relative time on the registry's own UTXO (`contracts/RootRegistry.scash:65`). The chain enforces the lock, so no key can shorten it.
 - A separate guardian key can cancel a pending root during the window and can never propose (`contracts/RootRegistry.scash:57`). Cancelled epochs are burned.
 - While a proposal is pending no second one is accepted, so the operator cannot restart the window.
-- Activation is permissionless (`contracts/RootRegistry.scash:63`). The pool copies only the active root (`contracts/Proof of FoldPool.scash:52`).
+- Activation is permissionless (`contracts/RootRegistry.scash:63`). The pool copies only the active root (`contracts/FoldClaimPool.scash:52`).
 
 ## Operator push
 
-After the registry has held an active root idle for `pushDelay` (`contracts/RootRegistry.scash:73`), the operator may pay leaves that never claimed, only to the leaf's own identity and only for payouts of at least 1,000 base units (`contracts/Proof of FoldPool.scash:114`). A pushed leaf is settled in the same receipt, so the owner cannot be paid twice.
+After the registry has held an active root idle for `pushDelay` (`contracts/RootRegistry.scash:73`), the operator may pay leaves that never claimed, only to the leaf's own identity and only for payouts of at least 1,000 base units (`contracts/FoldClaimPool.scash:114`). A pushed leaf is settled in the same receipt, so the owner cannot be paid twice.
 
 ## Cost
 
@@ -73,19 +77,19 @@ Measured claim size under production limits, by proof depth (real accepted claim
 
 | Feature | Where |
 |---|---|
-| Stateful contracts, constructor arguments | `contracts/RootRegistry.scash:23`, `contracts/Proof of FoldPool.scash:34` |
-| Verified mapping | `contracts/Proof of FoldPool.scash:42` |
-| Token container: deposit, transfer | `contracts/Proof of FoldPool.scash:45`, `contracts/Proof of FoldPool.scash:98` |
-| Cross-contract state read through an interface | `contracts/Proof of FoldPool.scash:3`, `contracts/Proof of FoldPool.scash:52` |
+| Stateful contracts, constructor arguments | `contracts/RootRegistry.scash:23`, `contracts/FoldClaimPool.scash:34` |
+| Verified mapping | `contracts/FoldClaimPool.scash:42` |
+| Token container: deposit, transfer | `contracts/FoldClaimPool.scash:45`, `contracts/FoldClaimPool.scash:98` |
+| Cross-contract state read through an interface | `contracts/FoldClaimPool.scash:3`, `contracts/FoldClaimPool.scash:52` |
 | Relative timelock (`this.age`) | `contracts/RootRegistry.scash:65`, `contracts/RootRegistry.scash:76` |
-| `checkMultiSig` and `checkSig` | `contracts/RootRegistry.scash:37`, `contracts/Proof of FoldPool.scash:105` |
+| `checkMultiSig` and `checkSig` | `contracts/RootRegistry.scash:37`, `contracts/FoldClaimPool.scash:105` |
 | Modifiers | `contracts/RootRegistry.scash:36`, `contracts/RootRegistry.scash:41` |
 | Enum | `contracts/RootRegistry.scash:13` |
-| Events, read back in tests | `contracts/RootRegistry.scash:3`, `contracts/Proof of FoldPool.scash:15` |
-| Custom errors | `contracts/RootRegistry.scash:8`, `contracts/Proof of FoldPool.scash:20` |
-| Internal functions, loops | `contracts/Proof of FoldPool.scash:61`, `contracts/Proof of FoldPool.scash:83`, `contracts/Proof of FoldPool.scash:67` |
-| Constants | `contracts/Proof of FoldPool.scash:35` |
-| Locking bytecode construction | `contracts/Proof of FoldPool.scash:124` |
+| Events, read back in tests | `contracts/RootRegistry.scash:3`, `contracts/FoldClaimPool.scash:15` |
+| Custom errors | `contracts/RootRegistry.scash:8`, `contracts/FoldClaimPool.scash:20` |
+| Internal functions, loops | `contracts/FoldClaimPool.scash:61`, `contracts/FoldClaimPool.scash:83`, `contracts/FoldClaimPool.scash:67` |
+| Constants | `contracts/FoldClaimPool.scash:35` |
+| Locking bytecode construction | `contracts/FoldClaimPool.scash:124` |
 
 ## Tests
 
