@@ -291,3 +291,9 @@ input::placeholder { color: var(--muted); }
 
 .wblock + .wblock { margin-top: var(--s4); }
 .band h3.sub { color: var(--on-ink); margin-top: 0; }
+
+.wc { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 0; }
+.wcdlg { border: 1px solid var(--ink); background: var(--paper-2); color: var(--ink); padding: 24px; max-width: 340px; text-align: center; }
+.wcdlg::backdrop { background: rgba(23, 24, 27, 0.55); }
+.wcdlg h3 { margin: 0 0 8px; font-size: 22px; }
+.wcdlg img { display: block; margin: 12px auto; }

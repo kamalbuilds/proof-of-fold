@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proof of Fold: BCH BLAZE 2026 presentation</title>
+<meta name="description" content="Folders pull their FoldingCash rewards with a Merkle proof, written in SolidCash">
+
+<style>@font-face{font-family:Newsreader;src:url(/fonts/Newsreader-400-700.woff2) format('woff2');font-weight:400 700;font-display:swap}@font-face{font-family:"IBM Plex Mono";src:url(/fonts/IBMPlexMono-400.woff2) format('woff2');font-weight:400;font-display:swap}
+:root{--bg:#e5eae6;--ink:#17181b;--mut:#4f5951;--acc:#1f3fd0;--rule:#b9c3bb;--ibg:#17181b;--iink:#f1f4f1;--iacc:#8fa4ff;--imut:#aab3ad}
+*{box-sizing:border-box}html{scroll-snap-type:y mandatory;scroll-behavior:smooth;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 clamp(16px,1.5vw,21px)/1.5 Newsreader,Georgia,serif;-webkit-font-smoothing:antialiased}
+.mono,code{font-family:"IBM Plex Mono",Menlo,ui-monospace,monospace;font-size:.82em}
+.s{min-height:100vh;min-height:100dvh;scroll-snap-align:start;display:grid;grid-template-rows:auto 1fr;padding:clamp(20px,4vw,56px) clamp(20px,7vw,112px) clamp(84px,9vw,112px);border-bottom:1px solid var(--rule)}
+.s.inv{background:var(--ibg);color:var(--iink);border-color:transparent}
+.meta{display:flex;justify-content:space-between;margin:0;font:500 12px/1 "IBM Plex Mono",Menlo,ui-monospace,monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.inv .meta{color:var(--imut)}
+.body{align-self:center;max-width:1100px;width:100%}
+h1{font:400 clamp(34px,5.6vw,76px)/1.02 Newsreader,Georgia,serif;letter-spacing:-.025em;margin:0 0 clamp(18px,3vw,40px)}
+h1.big{font-size:clamp(48px,11vw,150px);line-height:.95;letter-spacing:-.035em;margin-bottom:.25em}
+.kick{font:500 12px/1 "IBM Plex Mono",Menlo,ui-monospace,monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--iacc);margin:0 0 20px}
+.tag{font-size:clamp(20px,2.6vw,34px);line-height:1.25;max-width:26em;margin:0 0 28px;color:var(--imut)}
+.who{margin:0 0 6px}.lnk{margin:0}
+a{color:inherit;text-decoration-thickness:1px;text-underline-offset:4px;text-decoration-color:var(--acc)}.inv a{text-decoration-color:var(--iacc)}
+a:hover,a:focus-visible{color:var(--acc)}.inv a:hover,.inv a:focus-visible{color:var(--iacc)}
+.lead{font-size:clamp(18px,2.1vw,28px);line-height:1.4;max-width:34em;margin:0 0 clamp(16px,2.4vw,32px)}
+.items{list-style:none;margin:0;padding:0;counter-reset:i;max-width:46em}
+.items li{counter-increment:i;display:grid;grid-template-columns:3.2em 1fr;gap:0 8px;padding:.7em 0;border-top:1px solid var(--rule);font-size:clamp(16px,1.7vw,23px);line-height:1.35}
+.items li:last-child{border-bottom:1px solid var(--rule)}
+.items li::before{content:counter(i,decimal-leading-zero);font:500 .62em/2.2 "IBM Plex Mono",Menlo,ui-monospace,monospace;color:var(--acc)}
+.facts{margin:0;max-width:52em}.facts div{display:grid;grid-template-columns:minmax(10em,16em) 1fr;gap:6px 20px;padding:.6em 0;border-top:1px solid var(--rule);align-items:baseline}
+.facts div:last-child{border-bottom:1px solid var(--rule)}
+.facts dt{font:500 12px/1.3 "IBM Plex Mono",Menlo,ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}.facts dd{margin:0;overflow-wrap:anywhere}
+.lk{list-style:none;margin:0;padding:0;font-size:clamp(16px,1.8vw,24px)}.lk li{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;padding:.55em 0;border-top:1px solid #ffffff33}
+.lk span{font:500 12px/1 "IBM Plex Mono",Menlo,ui-monospace,monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--imut);min-width:7.5em}.lk code{overflow-wrap:anywhere}
+button,.nav a{font:500 13px/1 "IBM Plex Mono",Menlo,ui-monospace,monospace;color:inherit;background:transparent;border:1px solid currentColor;padding:8px 12px;cursor:pointer;text-decoration:none}
+button:hover,button:focus-visible{color:var(--acc)}.inv button:hover{color:var(--iacc)}
+.nav{position:fixed;left:0;right:0;bottom:0;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px clamp(16px,4vw,48px);background:color-mix(in srgb,var(--bg) 92%,transparent);border-top:1px solid var(--rule);color:var(--ink);backdrop-filter:blur(6px)}
+.nav .grp{display:flex;gap:8px;align-items:center}.nav output{font:500 13px/1 "IBM Plex Mono",Menlo,ui-monospace,monospace;min-width:5em;text-align:center}
+.nav.on-inv{background:color-mix(in srgb,var(--ibg) 92%,transparent);color:var(--iink);border-color:#ffffff33}
+@media(max-width:640px){.facts div{grid-template-columns:1fr}.meta span:last-child{display:none}.nav .home{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{.nav{display:none}.s{min-height:auto;height:100vh;break-after:page}html{scroll-snap-type:none}}
+</style></head><body>
+<main><section class="s s-title inv" id="s1" aria-label="Slide 1 of 6"><p class="meta"><span>01 / 06</span><span>www.bchblaze.cash</span></p><div class="body"><p class="kick">BCH BLAZE 2026</p><h1 class="big">Proof of Fold</h1><p class="tag">Folders pull their FoldingCash rewards with a Merkle proof, written in SolidCash</p><p class="who">Team kamalbuilds</p><p class="lnk"><a href="https://github.com/kamalbuilds/proof-of-fold" rel="noopener">github.com/kamalbuilds/proof-of-fold</a></p></div></section>
+<section class="s s-story" id="s2" aria-label="Slide 2 of 6"><p class="meta"><span>02 / 06</span><span>www.bchblaze.cash</span></p><div class="body"><h1>The Story of Proof of Fold</h1><p class="lead">FoldingCash pays folders by pushing one payment per person. The sponsor API lists 56 rows for the pinned window and every one is a legacy 1... address, so there is no token-aware address to push to. We flipped the direction. The operator publishes one Merkle root per epoch, and each folder signs a claim with the key behind the address they already hold. The signature is the link, so no address-linking database exists to trust.</p></div></section>
+<section class="s s-list" id="s3" aria-label="Slide 3 of 6"><p class="meta"><span>03 / 06</span><span>www.bchblaze.cash</span></p><div class="body"><h1>Benefits of Proof of Fold</h1><ol class="items"><li>One root per epoch replaces one payment per folder</li><li>Claim with the key behind your existing 1... address, into any token-aware wallet</li><li>Payout leaves built from the live api.folding.cash GetDistro response, SHA-256 pinned on chain beside the root</li><li>Anyone re-fetches the URL, rebuilds the tree and compares, in the page</li><li>2-of-3 operator proposals and a guardian veto inside the audit window</li><li>51 of 51 tests pass and 19 of 19 mutations turn the tests red</li></ol></div></section>
+<section class="s s-bch" id="s4" aria-label="Slide 4 of 6"><p class="meta"><span>04 / 06</span><span>www.bchblaze.cash</span></p><div class="body"><h1>BCH Usage</h1><p class="lead">Fungible CashTokens (tFLDCH, 8 decimals) sit in a SolidCash covenant pool. A RootRegistry covenant holds each epoch root. Live on chipnet, every step read back from chain:</p><dl class="facts"><div><dt>Epoch 1 root</dt><dd><span class="mono">a890b9cc68b7…eb697f8, 206 leaves</span></dd></div><div><dt>Registry genesis</dt><dd><a class="mono" href="https://chipnet.imaginary.cash/tx/5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1" rel="noopener" title="5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1">5ce909bb6c…8d2004f1</a></dd></div><div><dt>Claim from the browser</dt><dd><a class="mono" href="https://chipnet.imaginary.cash/tx/9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d" rel="noopener" title="9bd9a4c80149da766cd6090eeb7bfc90739f32479e9cbbc9ccf0303071ac160d">9bd9a4c801…71ac160d</a></dd></div><div><dt>Epoch 4 claim, difference only</dt><dd><a class="mono" href="https://chipnet.imaginary.cash/tx/af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37" rel="noopener" title="af5e326aef8566332f7e01565e47e7ce65cca9dcc8f6d0332df8394584394c37">af5e326aef…84394c37</a></dd></div><div><dt>Operator push</dt><dd><a class="mono" href="https://chipnet.imaginary.cash/tx/9a137d4c144799568b830ece32527e25e539a898d805bc7f251a3df81f4f4ed0" rel="noopener" title="9a137d4c144799568b830ece32527e25e539a898d805bc7f251a3df81f4f4ed0">9a137d4c14…1f4f4ed0</a></dd></div></dl></div></section>
+<section class="s s-vision" id="s5" aria-label="Slide 5 of 6"><p class="meta"><span>05 / 06</span><span>www.bchblaze.cash</span></p><div class="body"><h1>The Vision for Proof of Fold</h1><p class="lead">Any sponsor that owes many people tokens publishes one root instead of one payment per person.</p><ol class="items"><li>Abstraction increases: a payout run becomes a single Merkle root</li><li>Next priority -&gt; the production profile of 144 block audit and 4032 block push windows</li><li>Target: every FoldingCash epoch settled by one root</li></ol></div></section>
+<section class="s s-thanks inv" id="s6" aria-label="Slide 6 of 6"><p class="meta"><span>06 / 06</span><span>www.bchblaze.cash</span></p><div class="body"><h1 class="big">THANK YOU!</h1><ul class="lk"><li><span>Source</span><a href="https://github.com/kamalbuilds/proof-of-fold" rel="noopener">github.com/kamalbuilds/proof-of-fold</a></li><li><span>Live</span><a href="https://proof-of-fold.vercel.app" rel="noopener">proof-of-fold.vercel.app</a></li><li><span>Slides</span><a href="/deck.pdf">proof-of-fold.vercel.app/deck.pdf</a></li><li><span>EMBER2026</span><code id="ad">bitcoincash:zzmluxvlstsev2npsurwr842k9la63seuvqyl8v629</code><button type="button" id="cp">Copy</button></li></ul></div></section></main>
+<nav class="nav" id="nav" aria-label="Slides"><div class="grp"><button type="button" id="prev" aria-label="Previous slide">Prev</button><output id="pos" aria-live="polite">1 / 6</output><button type="button" id="next" aria-label="Next slide">Next</button></div><div class="grp"><a class="home" href="/">Open the app</a><a href="/deck.pdf">PDF</a></div></nav>
+<script>(function(){var s=[].slice.call(document.querySelectorAll('.s')),n=s.length,i=0,pos=document.getElementById('pos'),nav=document.getElementById('nav');
+function go(k){k=Math.max(0,Math.min(n-1,k));s[k].scrollIntoView();}
+function upd(k){i=k;pos.textContent=(k+1)+' / '+n;nav.classList.toggle('on-inv',s[k].classList.contains('inv'));history.replaceState(null,'','#'+(k+1));}
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)upd(s.indexOf(e.target))})},{threshold:.55});s.forEach(function(x){io.observe(x)});
+document.getElementById('prev').onclick=function(){go(i-1)};document.getElementById('next').onclick=function(){go(i+1)};
+addEventListener('keydown',function(e){if(e.target.closest&&e.target.closest('button,a'))if(e.key===' '||e.key==='Enter')return;
+var k={ArrowRight:i+1,ArrowDown:i+1,PageDown:i+1,' ':e.shiftKey?i-1:i+1,ArrowLeft:i-1,ArrowUp:i-1,PageUp:i-1,Home:0,End:n-1}[e.key];if(k===undefined||e.metaKey||e.ctrlKey||e.altKey)return;e.preventDefault();go(k)});
+var h=parseInt(location.hash.slice(1),10);if(h>1&&h<=n){s[h-1].scrollIntoView({behavior:'instant'})}
+var cp=document.getElementById('cp');cp.onclick=function(){var t=document.getElementById('ad').textContent,d=function(){cp.textContent='Copied';setTimeout(function(){cp.textContent='Copy'},1600)};navigator.clipboard?navigator.clipboard.writeText(t).then(d,d):d()};})();</script>
+</body></html>

@@ -23,7 +23,10 @@
     "@bitauth/libauth": "file:vendor/bitauth-libauth-3.1.0-next.8.tgz",
     "@solidcash/solidc": "0.50.0",
     "@solidcash/solidcash": "0.50.0",
-    "@solidcash/solidhat": "0.50.0"
+    "@solidcash/solidhat": "0.50.0",
+    "@wizardconnect/core": "^0.2.10",
+    "@wizardconnect/dapp": "^0.2.7",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@noble/curves": "^1.9.7",

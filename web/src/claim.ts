@@ -9,6 +9,7 @@ import { leafKey, rootFromProof } from '../../src/merkle.ts';
 import { $, NETS, FEE_RATE, lockEta, esc, fmtInt, fmtTokens, isZeroRoot, loadEpoch, epochToShow, shortHex, sleep, txLink, addrLink, blocksToActivate, type Ctx, type Snap } from './chain.ts';
 import { selectLeaf } from './leafview.ts';
 import { txStats } from './txstats.ts';
+import { initWizard } from './wizard.ts';
 
 type Claimer = { i: number; priv: Uint8Array; address: string; leaf: Leaf; claimed: bigint; sats: bigint };
 type Dest = { address: string; lock: Uint8Array };
@@ -399,4 +400,5 @@ export function initClaim(c: Ctx, refresh: () => Promise<void>, claimed: (txid: 
   $('claimform').addEventListener('submit', (e) => { e.preventDefault(); doClaim(); });
   $('claim-next').addEventListener('click', async () => { if (claimer) await setClaimer(await assign(claimer.i), true); });
   $('double-btn').addEventListener('click', doDouble);
+  initWizard(prefix, input);
 }

@@ -11,6 +11,19 @@
 <link rel="preload" href="./fonts/IBMPlexMono-400.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body>
+<style>
+.blaze-bar{background:#17181b;color:#f1f4f1;font:500 13px/1.2 "IBM Plex Mono",ui-monospace,monospace;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:9px max(16px,calc((100vw - 1200px)/2));position:relative;z-index:50}
+.blaze-bar a{color:#f1f4f1;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#8fa4ff}
+.blaze-bar a:hover,.blaze-bar a:focus-visible{color:#8fa4ff}
+.blaze-bar .bb-t{letter-spacing:.09em;text-transform:uppercase;font-size:11px;opacity:.7}
+.blaze-bar .bb-e{display:flex;align-items:center;gap:8px;min-width:0;margin-left:auto}
+.blaze-bar code{font:400 12px/1 ui-monospace,"SF Mono",Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
+.blaze-bar button{font:inherit;font-size:12px;color:#f1f4f1;background:transparent;border:1px solid #f1f4f1;padding:3px 9px;cursor:pointer}
+.blaze-bar button:hover,.blaze-bar button:focus-visible{border-color:#8fa4ff;color:#8fa4ff}
+@media(max-width:700px){.blaze-bar .bb-e{margin-left:0;flex:1 1 100%}.blaze-bar code{max-width:none;flex:1}}
+</style>
+<div class="blaze-bar" role="region" aria-label="BCH BLAZE 2026 entry links"><span class="bb-t">BCH BLAZE 2026</span><a href="/deck/">Presentation</a><a href="https://github.com/kamalbuilds/proof-of-fold" rel="noopener">Source</a><span class="bb-e"><a href="bitcoincash:zzmluxvlstsev2npsurwr842k9la63seuvqyl8v629">EMBER2026</a><code id="bb-addr">bitcoincash:zzmluxvlstsev2npsurwr842k9la63seuvqyl8v629</code><button type="button" id="bb-copy" aria-label="Copy EMBER2026 donation address">Copy</button></span></div>
+<script>document.getElementById('bb-copy').addEventListener('click',function(){var b=this,t=document.getElementById('bb-addr').textContent;var done=function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1600)};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,done)}else{var r=document.createRange();r.selectNodeContents(document.getElementById('bb-addr'));var s=getSelection();s.removeAllRanges();s.addRange(r);try{document.execCommand('copy')}catch(e){}done()}});</script>
 <a class="skip" href="#claim">Skip to claim</a>
 <header class="top">
   <div class="top-in">
@@ -63,6 +76,7 @@
       <label class="field" for="dest"><span class="lbl">Destination, token-aware address</span>
         <input id="dest" name="dest" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="bchtest:z...">
       </label>
+      <p class="wc"><button class="btn" id="wc-connect" type="button">Connect with WizardConnect</button><span class="hint" id="wc-status" role="status"></span></p>
       <p class="hint" id="dest-hint" role="status"></p>
       <div id="claimer" class="claimer" hidden></div>
       <div id="claim-gate" class="gate" hidden></div>
@@ -71,6 +85,12 @@
         <button class="btn" id="claim-next" type="button" hidden>Another demo leaf</button>
       </p>
     </form>
+    <dialog id="wc-dialog" class="wcdlg" aria-labelledby="wc-title">
+      <h3 id="wc-title">Pair your wallet</h3>
+      <p>Scan with a WizardConnect wallet such as Paytaca or Cashonize. On a phone, open the link instead.</p>
+      <img id="wc-qr" alt="WizardConnect pairing code" width="260" height="260">
+      <p><a id="wc-link" class="btn" href="#">Open in wallet app</a> <button class="btn ghost" id="wc-close" type="button">Close</button></p>
+    </dialog>
     <ol class="steps" id="steps" aria-live="polite"></ol>
     <div id="claim-result" class="result" hidden></div>
     <div id="double" class="double" hidden>
