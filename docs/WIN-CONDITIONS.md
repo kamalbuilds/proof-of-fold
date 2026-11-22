@@ -1,6 +1,6 @@
 # Win conditions
 
-Entry: FoldClaim for FoldingCash, pull-based reward claims written in SolidCash. Targets the FoldingCash bounty and the Best SolidCash Application prize.
+Entry: Proof of Fold for FoldingCash, pull-based reward claims written in SolidCash. Targets the FoldingCash bounty and the Best SolidCash Application prize.
 
 ## Rival to beat
 
@@ -39,7 +39,7 @@ FLDCH, category `0adb865ee9cc3038de87fba682e6cd361414edc9acff0da2fd0690d75341c64
 
 ## File paths
 
-- Contracts: `contracts/RootRegistry.scash`, `contracts/FoldClaimPool.scash`
+- Contracts: `contracts/RootRegistry.scash`, `contracts/Proof of FoldPool.scash`
 - Merkle library and leaf format: `src/merkle.ts`, `src/identity.ts`
 - Tests (solidhat): `test/registry.test.ts`, `test/pool.test.ts`, `test/merkle.test.ts`
 - Mutation proofs: `TESTS.md`
