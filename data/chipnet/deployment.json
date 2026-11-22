@@ -1,0 +1,42 @@
+{
+  "network": "chipnet",
+  "tokenCategory": "a1072ff78525d5e612e64905dc320533308397518fb3226692d36745e7ab3471",
+  "rootDelay": 6,
+  "pushDelay": 12,
+  "operators": [
+    "03567d0aab103455d5dee0f97ea24b7ca84ea76be671e04cd730b5ec686b312f63",
+    "0203ed7d9ee9ae1669a0c703b98277866698757ffd98826d1fffa752560095e626",
+    "023d98bb67fc94a3343df285c395ca3017af3f97d9b0e180806435bb3ca94dc490"
+  ],
+  "guardian": "03a1d9452258f02d0d12a4867e8de2618022f9b80b822907a0fa838d0c1c16314d",
+  "pusher": "03ed114a9bdbfe90d991b1783eb98c2de958ab5acda03ea45db0025adde6ea2e0f",
+  "registry": {
+    "categoryId": "f3d1b771511b07efa982513fa65f3dd02465c81a4f4b3d9f9fba01f4e001d56b",
+    "address": "bchtest:pdxa23mu3k5tpwd6228ajg7zuhsswq27u5ntwdh59cfs8kgx7ytkc45fuvxwz",
+    "deployTxid": "5ce909bb6c8c91bdcb4107a5cbfb64a4e47ab8c99845a4e192bcb1508d2004f1"
+  },
+  "pool": {
+    "categoryId": "fab5154f9ab557ab05ae183e479c56124033e57f6b8af244bfc019673b676fda",
+    "address": "bchtest:pdx85dqzxjlqjg47se7grq7lmtpanfzfuwpehfc5akpsuys9uelju4ttx8vxv",
+    "deployTxid": "51602319eeb32387bbbf65b5c8ef7178590ebe9a939441171fd08a9ff66eb8dd",
+    "fundTxid": "04f4cbcbdee053014e871ef70ec468d05ed7e0692a6fdffc3c0791da8170dc86"
+  },
+  "fundedBurners": {
+    "sats": "30000",
+    "indices": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "previousPools": [
+    {
+      "categoryId": "146333432ea2cc8954cecf0e6c76aa144475ed2f6c6c3116b0c40e44da32d6c8",
+      "address": "bchtest:pd5h697k0wgde8l3gpfspeylls4vjcxewzr3h6q0u0rgevg6rf0hvwgk6urss",
+      "deployTxid": "c5e7e20389f5ac2a3a77d66090e167d8c1abc9c29b80822d20bc630eed234dca",
+      "fundTxid": "de97ac8b55f4b2560c380d16053e0f20f49f2256548188dee14f4b1345054585",
+      "retiredAt": "2026-11-21T18:25:47.356Z"
+    }
+  ]
+}

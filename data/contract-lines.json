@@ -1,0 +1,18 @@
+{
+  "twoOfThree": "contracts/RootRegistry.scash:36",
+  "onlyGuardian": "contracts/RootRegistry.scash:41",
+  "proposeRoot": "contracts/RootRegistry.scash:46",
+  "cancelPending": "contracts/RootRegistry.scash:57",
+  "activateRoot": "contracts/RootRegistry.scash:63",
+  "rootDelay": "contracts/RootRegistry.scash:65",
+  "openPush": "contracts/RootRegistry.scash:73",
+  "pushDelay": "contracts/RootRegistry.scash:76",
+  "syncRoot": "contracts/FoldClaimPool.scash:52",
+  "claimWithKey": "contracts/FoldClaimPool.scash:103",
+  "nothingToClaim": "contracts/FoldClaimPool.scash:89",
+  "push": "contracts/FoldClaimPool.scash:114",
+  "pushWindow": "contracts/FoldClaimPool.scash:119",
+  "minPush": "contracts/FoldClaimPool.scash:121",
+  "pushDestination": "contracts/FoldClaimPool.scash:124",
+  "minPushUnits": 1000
+}
